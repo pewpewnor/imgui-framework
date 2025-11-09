@@ -11,29 +11,30 @@ Application::Application()
     : glfw_context_(nullptr),
       window_(nullptr),
       imgui_context_(nullptr),
-      is_initialized_(false),
       show_demo_window_(true),
+      is_initialized_(false),
       clear_color_(0.45F, 0.55F, 0.60F, 1.0F),
       counter_(0),
-      slider_value_(0.0F) {}
+      slider_value_(0.0F),
+      scale_(1.0F) {}
 
 Application::~Application() { shutdown(); }
 
 bool Application::initialize() {
     try {
-        // Initialize GLFW context
         glfw_context_ = std::make_unique<surface::GlfwContext>();
 
-        // Create window
-        scale_ =
-            ImGui_ImplGlfw_GetContentScaleForMonitor(glfw::getPrimaryMonitor());
-        window_ = std::make_unique<surface::GlfwWindow>(
-            1280 * scale_, 800 * scale_, "Example App");
+        GLFWmonitor* primary = glfwGetPrimaryMonitor();
+        if (primary != nullptr) {
+            scale_ = ImGui_ImplGlfw_GetContentScaleForMonitor(primary);
+        }
 
-        // Initialize ImGui context
+        window_ = std::make_unique<surface::GlfwWindow>(
+            static_cast<int>(1280 * scale_), static_cast<int>(800 * scale_),
+            "Example App");
+
         imgui_context_ = std::make_unique<surface::ImGuiContext>(*window_);
 
-        // Configure ImGui
         if (!initializeImGui()) {
             return false;
         }
@@ -50,12 +51,10 @@ bool Application::initialize() {
 bool Application::initializeImGui() {
     ImGuiIO& io = ImGui::GetIO();
 
-    // Enable keyboard navigation
     io.ConfigFlags = static_cast<int>(
         static_cast<unsigned int>(io.ConfigFlags) |
         static_cast<unsigned int>(ImGuiConfigFlags_NavEnableKeyboard));
 
-    // Set style
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
     style.ScaleAllSizes(scale_);
@@ -70,11 +69,9 @@ void Application::run() {
         return;
     }
 
-    // Main loop
     while (glfwWindowShouldClose(window_->get()) == 0) {
         handleInput();
 
-        // Skip rendering if minimized
         if (glfwGetWindowAttrib(window_->get(), GLFW_ICONIFIED) != 0) {
             ImGui_ImplGlfw_Sleep(10);
             continue;
@@ -87,15 +84,12 @@ void Application::run() {
 void Application::handleInput() { glfwPollEvents(); }
 
 void Application::renderFrame() {
-    // Start ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // Render UI
     renderUI();
 
-    // Rendering
     ImGui::Render();
 
     int display_w = 0;
@@ -114,36 +108,31 @@ void Application::renderFrame() {
 void Application::renderUI() {
     ImGuiIO& io = ImGui::GetIO();
 
-    // Demo window
     if (show_demo_window_) {
         ImGui::ShowDemoWindow(&show_demo_window_);
     }
 
-    // Custom window
-    {
-        ImGui::Begin("Hello, world!");
+    ImGui::Begin("Hello, world!");
 
-        ImGui::TextUnformatted("This is some useful text.");
-        ImGui::Checkbox("Demo Window", &show_demo_window_);
-        ImGui::SliderFloat("float", &slider_value_, 0.0F, 1.0F);
-        ImGui::ColorEdit3("clear color", &clear_color_.x);
+    ImGui::TextUnformatted("This is some useful text.");
+    ImGui::Checkbox("Demo Window", &show_demo_window_);
+    ImGui::SliderFloat("float", &slider_value_, 0.0F, 1.0F);
+    ImGui::ColorEdit3("clear color", &clear_color_.x);
 
-        if (ImGui::Button("Button")) {
-            counter_++;
-        }
-        ImGui::SameLine();
-
-        const std::string counter_text =
-            "counter = " + std::to_string(counter_);
-        ImGui::TextUnformatted(counter_text.c_str());
-
-        const std::string fps_text =
-            "Application average " + std::to_string(1000.0F / io.Framerate) +
-            " ms/frame (" + std::to_string(io.Framerate) + " FPS)";
-        ImGui::TextUnformatted(fps_text.c_str());
-
-        ImGui::End();
+    if (ImGui::Button("Button")) {
+        counter_++;
     }
+    ImGui::SameLine();
+
+    const std::string counter_text = "counter = " + std::to_string(counter_);
+    ImGui::TextUnformatted(counter_text.c_str());
+
+    const std::string fps_text =
+        "Application average " + std::to_string(1000.0F / io.Framerate) +
+        " ms/frame (" + std::to_string(io.Framerate) + " FPS)";
+    ImGui::TextUnformatted(fps_text.c_str());
+
+    ImGui::End();
 }
 
 void Application::shutdown() {

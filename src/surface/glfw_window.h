@@ -12,12 +12,9 @@ public:
 
     ~GlfwWindow();
 
-    GlfwWindow(const GlfwWindow&) = default;
-
+    GlfwWindow(const GlfwWindow&) = delete;
     GlfwWindow(GlfwWindow&&) = delete;
-
-    GlfwWindow& operator=(const GlfwWindow&) = default;
-
+    GlfwWindow& operator=(const GlfwWindow&) = delete;
     GlfwWindow& operator=(GlfwWindow&&) = delete;
 
 private:
