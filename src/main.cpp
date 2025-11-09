@@ -2,15 +2,19 @@
 
 #include "application.h"
 
+int runApplication() {
+    Application app;
+    if (!app.initialize()) {
+        std::cerr << "Failed to initialize application" << std::endl;
+        return 1;
+    }
+    app.run();
+    return 0;
+}
+
 int main() {
     try {
-        Application app;
-        if (!app.initialize()) {
-            std::cerr << "Failed to initialize application" << std::endl;
-            return 1;
-        }
-        app.run();
-        return 0;
+        return runApplication();
     } catch (const std::exception& error) {
         std::cerr << "Fatal error: " << error.what() << std::endl;
         return 1;

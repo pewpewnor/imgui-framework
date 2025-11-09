@@ -9,6 +9,12 @@
 
 #include "surface/glfw.h"
 
+// TODO:
+// glfw namespace, gl namespace
+// for loop call render on list of layers (a member)
+// create abstract base class for layer
+// base parent layer is constructed with the state shared ptr
+
 Application::Application()
     : glfw_context_(nullptr),
       window_(nullptr),
@@ -26,7 +32,7 @@ bool Application::initialize() {
     try {
         glfw_context_ = std::make_unique<surface::GlfwContext>();
 
-        GLFWmonitor* primary = glfw::getPrimaryMonitor();
+        glfw::Monitor* primary = glfw::getPrimaryMonitor();
         if (primary != nullptr) {
             scale_ = ImGui_ImplGlfw_GetContentScaleForMonitor(primary);
         }
@@ -44,8 +50,8 @@ bool Application::initialize() {
         is_initialized_ = true;
         return true;
 
-    } catch (const std::exception& exc) {
-        std::cerr << "Initialization error: " << exc.what() << std::endl;
+    } catch (const std::exception& exception) {
+        std::cerr << "Initialization error: " << exception.what() << std::endl;
         return false;
     }
 }

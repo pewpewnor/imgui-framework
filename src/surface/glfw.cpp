@@ -13,6 +13,6 @@ glfw::Window* glfw::createWindow(int width, int height,
     return glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 }
 
-GLFWmonitor* glfw::getPrimaryMonitor() { return glfwGetPrimaryMonitor(); }
+glfw::Monitor* glfw::getPrimaryMonitor() { return glfwGetPrimaryMonitor(); }
 
 void glfw::terminate() { glfwTerminate(); }

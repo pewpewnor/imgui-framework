@@ -10,16 +10,19 @@
 class Application {
 public:
     Application();
+
     ~Application();
+
+    bool initialize();
+
+    void run();
+
+    void shutdown();
 
     Application(const Application&) = delete;
     Application(Application&&) = delete;
     Application& operator=(const Application&) = delete;
     Application& operator=(Application&&) = delete;
-
-    bool initialize();
-    void run();
-    void shutdown();
 
 private:
     std::unique_ptr<surface::GlfwContext> glfw_context_;
@@ -34,6 +37,8 @@ private:
     float scale_;
 
     bool initializeImGui() const;
+
     void renderFrame();
+
     void renderUI();
 };

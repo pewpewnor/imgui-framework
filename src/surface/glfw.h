@@ -12,11 +12,13 @@ namespace glfw {
 
 using Window = GLFWwindow;
 
+using Monitor = GLFWmonitor;
+
 bool init();
 
 glfw::Window* createWindow(int width, int height, const std::string& title);
 
-GLFWmonitor* getPrimaryMonitor();
+glfw::Monitor* getPrimaryMonitor();
 
 void setErrorCallback(GLFWerrorfun callback);
 
