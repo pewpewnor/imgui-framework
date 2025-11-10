@@ -10,9 +10,12 @@ namespace engine {
 template <typename TShared>
 class State {
 public:
-    std::shared_ptr<engine::Settings> settings;
+    engine::Settings settings;
     std::shared_ptr<glfw::Window> window;
-    std::shared_ptr<TShared> shared;
+    TShared shared;
+
+    State(const Settings& settings, const TShared& shared)
+        : settings(settings), shared(shared) {}
 };
 
 }

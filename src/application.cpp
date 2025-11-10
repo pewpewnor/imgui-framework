@@ -63,11 +63,8 @@ private:
 };
 
 void Application::run() {
-    auto settings =
-        std::make_shared<engine::Settings>(1280, 720, "Example App", true);
-    auto shared = std::make_shared<SharedState>();
-
-    engine_ = std::make_unique<engine::Engine<SharedState>>(settings, shared);
+    engine_ = std::make_unique<engine::Engine<SharedState>>(
+        engine::Settings(1280, 720, "Example App", true), SharedState());
 
     engine_->initialize();
 

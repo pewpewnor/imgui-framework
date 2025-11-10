@@ -18,56 +18,12 @@ namespace engine {
 template <typename TShared>
 class Engine {
 public:
-    Engine(const std::shared_ptr<engine::Settings>& settings,
-           const std::shared_ptr<TShared>& shared)
-        : state_(std::make_shared<engine::State<TShared>>()) {
-        state_->settings = settings;
-        state_->shared = shared;
-    };
+    Engine(const engine::Settings& settings, const TShared& shared)
+        : state_(std::make_shared<engine::State<TShared>>(settings, shared)) {};
 
     void initialize() {
-        glfw::setErrorCallback([](int errorCode, const char* description) {
-            std::cerr << "GLFW Error " << errorCode << ": " << description
-                      << std::endl;
-        });
-
-        if (!glfw::init()) {
-            throw std::runtime_error("failed to initialize GLFW");
-        }
-
-        float scale = ImGui_ImplGlfw_GetContentScaleForMonitor(
-            glfw::getPrimaryMonitor().get());
-
-        state_->window = glfw::createWindow(
-            static_cast<int>(static_cast<float>(state_->settings->width) *
-                             scale),
-            static_cast<int>(static_cast<float>(state_->settings->height) *
-                             scale),
-            state_->settings->title);
-
-        glfw::makeContextCurrent(state_->window);
-        glfw::switchVsync(state_->settings->vsync);
-
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-
-        ImGuiIO& ioContext = ImGui::GetIO();
-        ioContext.ConfigFlags = static_cast<int>(
-            static_cast<unsigned int>(ioContext.ConfigFlags) |
-            static_cast<unsigned int>(ImGuiConfigFlags_NavEnableKeyboard));
-
-        ImGui::StyleColorsDark();
-        ImGui::GetStyle().ScaleAllSizes(scale);
-
-        if (!ImGui_ImplGlfw_InitForOpenGL(state_->window.get(), true)) {
-            throw std::runtime_error("failed to initialize ImGui GLFW backend");
-        }
-
-        if (!ImGui_ImplOpenGL3_Init(glfw::glslVersion().c_str())) {
-            ImGui_ImplGlfw_Shutdown();
-            throw std::runtime_error(
-                "failed to initialize ImGui OpenGL3 backend");
-        }
+        initializeGlfw();
+        initializeImGui();
     }
 
     void run() {
@@ -95,6 +51,53 @@ public:
 private:
     std::vector<std::shared_ptr<engine::Layer<TShared>>> layers_;
     std::shared_ptr<engine::State<TShared>> state_;
+
+    void initializeGlfw() {
+        glfw::setErrorCallback([](int errorCode, const char* description) {
+            std::cerr << "GLFW Error " << errorCode << ": " << description
+                      << std::endl;
+        });
+
+        if (!glfw::init()) {
+            throw std::runtime_error("failed to initialize GLFW");
+        }
+
+        state_->settings.scale = ImGui_ImplGlfw_GetContentScaleForMonitor(
+            glfw::getPrimaryMonitor().get());
+
+        state_->window = glfw::createWindow(
+            static_cast<int>(static_cast<float>(state_->settings.width) *
+                             state_->settings.scale),
+            static_cast<int>(static_cast<float>(state_->settings.height) *
+                             state_->settings.scale),
+            state_->settings.title);
+
+        glfw::makeContextCurrent(state_->window);
+        glfw::switchVsync(state_->settings.vsync);
+    }
+
+    void initializeImGui() {
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+
+        ImGuiIO& ioContext = ImGui::GetIO();
+        ioContext.ConfigFlags = static_cast<int>(
+            static_cast<unsigned int>(ioContext.ConfigFlags) |
+            static_cast<unsigned int>(ImGuiConfigFlags_NavEnableKeyboard));
+
+        ImGui::StyleColorsDark();
+        ImGui::GetStyle().ScaleAllSizes(state_->settings.scale);
+
+        if (!ImGui_ImplGlfw_InitForOpenGL(state_->window.get(), true)) {
+            throw std::runtime_error("failed to initialize ImGui GLFW backend");
+        }
+
+        if (!ImGui_ImplOpenGL3_Init(glfw::glslVersion().c_str())) {
+            ImGui_ImplGlfw_Shutdown();
+            throw std::runtime_error(
+                "failed to initialize ImGui OpenGL3 backend");
+        }
+    }
 
     void renderFrames() {
         ImGui_ImplOpenGL3_NewFrame();
