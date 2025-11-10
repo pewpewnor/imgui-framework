@@ -27,7 +27,7 @@ public:
     }
 
     void run() {
-        while (!glfw::windowShouldClose(state_->window)) {
+        while (!shouldStop()) {
             glfw::pollEvents();
             if (glfw::windowAttributeIsError(state_->window)) {
                 ImGui_ImplGlfw_Sleep(10);
@@ -35,22 +35,19 @@ public:
             }
             renderFrames();
         }
+        shutdown();
     }
 
     void addLayer(const std::shared_ptr<engine::Layer<TShared>>& layer) {
         layers_.push_back(layer);
     }
 
-    static void stop() {
-        glfw::terminate();
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-    }
+    void requestStop() { stopSignal_ = true; }
 
 private:
     std::vector<std::shared_ptr<engine::Layer<TShared>>> layers_;
     std::shared_ptr<engine::State<TShared>> state_;
+    bool stopSignal_ = false;
 
     void initializeGlfw() {
         glfw::setErrorCallback([](int errorCode, const char* description) {
@@ -111,6 +108,17 @@ private:
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfw::swapBuffers(state_->window);
+    }
+
+    bool shouldStop() {
+        return glfw::windowShouldClose(state_->window) || stopSignal_;
+    }
+
+    void shutdown() {
+        glfw::terminate();
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
     }
 };
 

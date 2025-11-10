@@ -8,7 +8,7 @@ class Application {
 public:
     void run();
 
-    static void quit();
+    void quit();
 
 private:
     std::unique_ptr<engine::Engine<SharedState>> engine_;

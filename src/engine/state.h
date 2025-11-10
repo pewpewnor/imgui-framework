@@ -11,8 +11,8 @@ template <typename TShared>
 class State {
 public:
     engine::Settings settings;
-    std::shared_ptr<glfw::Window> window;
     TShared shared;
+    std::shared_ptr<glfw::Window> window;
 
     State(const Settings& settings, const TShared& shared)
         : settings(settings), shared(shared) {}

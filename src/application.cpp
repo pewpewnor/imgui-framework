@@ -71,6 +71,8 @@ void Application::run() {
     engine_->addLayer(std::make_shared<DemoLayer>());
 
     engine_->run();
+
+    quit();
 }
 
-void Application::quit() { engine::Engine<SharedState>::stop(); }
+void Application::quit() { engine_->requestStop(); }
