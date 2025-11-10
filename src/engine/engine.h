@@ -118,6 +118,7 @@ private:
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
+        state_->window.reset();
         glfw::terminate();
     }
 };
