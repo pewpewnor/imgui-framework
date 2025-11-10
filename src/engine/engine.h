@@ -115,10 +115,10 @@ private:
     }
 
     void shutdown() {
-        glfw::terminate();
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
+        glfw::terminate();
     }
 };
 
