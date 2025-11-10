@@ -8,7 +8,6 @@
 
 #include "imgui.h"
 
-// DemoLayer derived from engine::Layer<SharedState>
 class DemoLayer : public engine::Layer<SharedState> {
 public:
     DemoLayer()
@@ -63,26 +62,18 @@ private:
     float slider_value_;
 };
 
-// Application methods
 void Application::run() {
-    // Create Settings and SharedState
     auto settings =
         std::make_shared<engine::Settings>(1280, 720, "Example App", true);
     auto shared = std::make_shared<SharedState>();
 
-    // Create engine instance with settings and shared state
     engine_ = std::make_unique<engine::Engine<SharedState>>(settings, shared);
 
-    // Initialize the engine
     engine_->initialize();
 
-    // Add DemoLayer
     engine_->addLayer(std::make_shared<DemoLayer>());
 
-    // Start main loop
     engine_->run();
 }
 
-void Application::quit() {
-    engine::Engine<SharedState>::stop();  // Call static method directly
-}
+void Application::quit() { engine::Engine<SharedState>::stop(); }
