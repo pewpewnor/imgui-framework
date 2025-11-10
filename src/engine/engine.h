@@ -18,10 +18,14 @@ namespace engine {
 template <typename TShared>
 class Engine {
 public:
-    Engine() = default;
+    Engine(const std::shared_ptr<engine::Settings>& settings,
+           const std::shared_ptr<TShared>& shared)
+        : state_(std::make_shared<engine::State<TShared>>()) {
+        state_->settings = settings;
+        state_->shared = shared;
+    };
 
-    void initialize(const std::shared_ptr<engine::Settings>& settings,
-                    const std::shared_ptr<TShared>& shared) {
+    void initialize() {
         glfw::setErrorCallback([](int errorCode, const char* description) {
             std::cerr << "GLFW Error " << errorCode << ": " << description
                       << std::endl;
@@ -34,16 +38,15 @@ public:
         float scale = ImGui_ImplGlfw_GetContentScaleForMonitor(
             glfw::getPrimaryMonitor().get());
 
-        std::shared_ptr<glfw::Window> window = glfw::createWindow(
-            static_cast<int>(static_cast<float>(settings->width) * scale),
-            static_cast<int>(static_cast<float>(settings->height) * scale),
-            settings->title);
+        state_->window = glfw::createWindow(
+            static_cast<int>(static_cast<float>(state_->settings->width) *
+                             scale),
+            static_cast<int>(static_cast<float>(state_->settings->height) *
+                             scale),
+            state_->settings->title);
 
-        glfw::makeContextCurrent(window);
-        glfw::switchVsync(settings->vsync);
-
-        state_ =
-            std::make_shared<engine::State<TShared>>(settings, window, shared);
+        glfw::makeContextCurrent(state_->window);
+        glfw::switchVsync(state_->settings->vsync);
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -56,7 +59,7 @@ public:
         ImGui::StyleColorsDark();
         ImGui::GetStyle().ScaleAllSizes(scale);
 
-        if (!ImGui_ImplGlfw_InitForOpenGL(window.get(), true)) {
+        if (!ImGui_ImplGlfw_InitForOpenGL(state_->window.get(), true)) {
             throw std::runtime_error("failed to initialize ImGui GLFW backend");
         }
 
