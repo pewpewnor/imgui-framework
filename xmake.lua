@@ -17,5 +17,6 @@ add_requires("opengl")
 
 target("project-name")
     set_kind("binary")
+    add_files("src/engine/*.cpp")
     add_files("src/**.cpp")
     add_packages("imgui", "glfw", "opengl")
