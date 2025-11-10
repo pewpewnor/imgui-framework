@@ -5,16 +5,11 @@
 #include "glfw.h"
 #include "glfw_window.h"
 
-surface::GlfwWindow::GlfwWindow(int width, int height,
-                                const std::string& title) {
-    int scaledWidth = static_cast<int>(static_cast<float>(width));
-    int scaledHeight = static_cast<int>(static_cast<float>(height));
-
-    window_ = glfw::createWindow(scaledWidth, scaledHeight, title);
+surface::GlfwWindow::GlfwWindow(int width, int height, const std::string& title)
+    : window_(glfw::createWindow(width, height, title)) {
     if (window_ == nullptr) {
         throw std::runtime_error("Failed to create GLFW window");
     }
-
     glfwMakeContextCurrent(window_);
     glfwSwapInterval(1);
 }

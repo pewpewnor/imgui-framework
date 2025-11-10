@@ -11,7 +11,6 @@
 namespace glfw {
 
 using Window = GLFWwindow;
-
 using Monitor = GLFWmonitor;
 
 bool init();
