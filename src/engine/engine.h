@@ -29,17 +29,17 @@ public:
         shutdown();
     }
 
-    void addStartupStep(
+    void pushStartupStep(
         const std::shared_ptr<engine::StartupStep<TState>>& step) {
         startupSteps_.push_back(step);
     }
 
-    void addRenderStep(
+    void pushRenderStep(
         const std::shared_ptr<engine::RenderStep<TState>>& step) {
         renderSteps_.push_back(step);
     }
 
-    void addShutdownStep(
+    void pushShutdownStep(
         const std::shared_ptr<engine::ShutdownStep<TState>>& step) {
         shutdownSteps_.push_back(step);
     }

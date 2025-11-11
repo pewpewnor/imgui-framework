@@ -62,10 +62,10 @@ void Application::run() {
     auto glfwImguiSurface =
         std::make_shared<engine::GlfwImguiSurface<SharedState>>(
             state, "Example App", 1280, 720, true);
-    engine_->addStartupStep(glfwImguiSurface);
-    engine_->addShutdownStep(glfwImguiSurface);
+    engine_->pushStartupStep(glfwImguiSurface);
+    engine_->pushShutdownStep(glfwImguiSurface);
 
-    engine_->addRenderStep(std::make_shared<RenderDemo>(state));
+    engine_->pushRenderStep(std::make_shared<RenderDemo>(state));
 
     engine_->run();
 }
