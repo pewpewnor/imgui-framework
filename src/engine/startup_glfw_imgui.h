@@ -6,13 +6,16 @@
 
 #include <iostream>
 
+#include "shutdown_step.h"
 #include "startup_step.h"
+#include "step.h"
 
 namespace surface {
 
 template <typename TState>
     requires std::derived_from<TState, engine::State>
-class StartupGlfwImGui : public engine::StartupStep<TState> {
+class StartupGlfwImGui : public engine::StartupStep<TState>,
+                         public engine::ShutdownStep<TState> {
 public:
     StartupGlfwImGui(const std::shared_ptr<TState>& state,
                      const std::string& title, int width, int height,
@@ -26,6 +29,14 @@ public:
     void onStartup() override {
         initializeGlfw();
         initializeImGui();
+    }
+
+    void onShutdown() override {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        this->state->glfwWindow.reset();
+        glfw::terminate();
     }
 
 private:

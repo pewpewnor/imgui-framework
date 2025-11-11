@@ -6,8 +6,9 @@
 #include <memory>
 #include <string>
 
-#include "engine/shutdown_glfw_imgui.h"
+#include "engine/render_step.h"
 #include "engine/startup_glfw_imgui.h"
+#include "engine/step.h"
 #include "imgui.h"
 
 class RenderDemo : public engine::RenderStep<SharedState> {
@@ -66,11 +67,11 @@ void Application::run() {
     auto state = std::make_shared<SharedState>();
 
     engine_ = std::make_unique<engine::Engine<SharedState>>(state);
-    engine_->addStartupStep(
-        std::make_shared<surface::StartupGlfwImGui<SharedState>>(
-            state, "Example App", 1280, 720, true));
-    engine_->addShutdownStep(
-        std::make_shared<surface::ShutdownGlfwImGui<SharedState>>(state));
+
+    auto glfwImGui = std::make_shared<surface::StartupGlfwImGui<SharedState>>(
+        state, "Example App", 1280, 720, true);
+    engine_->addStartupStep(glfwImGui);
+    engine_->addShutdownStep(glfwImGui);
 
     engine_->addRenderStep(std::make_shared<RenderDemo>(state));
 
