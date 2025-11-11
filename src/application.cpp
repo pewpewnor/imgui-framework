@@ -8,18 +8,18 @@
 
 #include "engine/shutdown_glfw_imgui.h"
 #include "engine/startup_glfw_imgui.h"
-#include "engine/state.h"
 #include "imgui.h"
 
-class DemoLayer : public engine::RenderStep {
+class RenderDemo : public engine::RenderStep<SharedState> {
 public:
-    DemoLayer()
-        : show_demo_window_(true),
+    RenderDemo(const std::shared_ptr<SharedState>& state)
+        : engine::Step<SharedState>(state),
+          show_demo_window_(true),
           clear_color_{0.45F, 0.55F, 0.60F, 1.0F},
           counter_(0),
           slider_value_(0.0F) {}
 
-    void onRender(const std::shared_ptr<engine::State>& engineState) override {
+    void onRender(const std::shared_ptr<SharedState>& state) override {
         ImGuiIO& imguiIO = ImGui::GetIO();
 
         if (show_demo_window_) {
@@ -48,7 +48,7 @@ public:
 
         int displayWidth = 0;
         int displayHeight = 0;
-        glfwGetFramebufferSize(engineState->window.get(), &displayWidth,
+        glfwGetFramebufferSize(state->window.get(), &displayWidth,
                                &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
         glClearColor(clear_color_.x * clear_color_.w,
@@ -65,11 +65,15 @@ private:
 };
 
 void Application::run() {
-    engine_.addStartupStep(std::make_shared<surface::StartupGlfwImGui>(
-        "Example App", 1280, 720, true));
-    engine_.addShutdownStep(std::make_shared<surface::ShutdownGlfwImGui>());
+    auto state = std::make_shared<SharedState>();
 
-    engine_.addRenderStep(std::make_shared<DemoLayer>());
+    engine_.addStartupStep(
+        std::make_shared<surface::StartupGlfwImGui<SharedState>>(
+            state, "Example App", 1280, 720, true));
+    engine_.addShutdownStep(
+        std::make_shared<surface::ShutdownGlfwImGui<SharedState>>(state));
+
+    engine_.addRenderStep(std::make_shared<RenderDemo>(state));
 
     engine_.run();
 }

@@ -16,6 +16,8 @@
 
 namespace engine {
 
+template <typename TState>
+    requires std::derived_from<TState, engine::State>
 class Engine {
 public:
     void run() {
@@ -29,39 +31,41 @@ public:
         shutdown();
     }
 
-    void addStartupStep(const std::shared_ptr<engine::StartupStep>& step) {
+    void addStartupStep(
+        const std::shared_ptr<engine::StartupStep<TState>>& step) {
         startupSteps_.push_back(step);
     }
 
-    void addRenderStep(const std::shared_ptr<engine::RenderStep>& step) {
+    void addRenderStep(
+        const std::shared_ptr<engine::RenderStep<TState>>& step) {
         renderSteps_.push_back(step);
     }
 
-    void addShutdownStep(const std::shared_ptr<engine::ShutdownStep>& step) {
+    void addShutdownStep(
+        const std::shared_ptr<engine::ShutdownStep<TState>>& step) {
         shutdownSteps_.push_back(step);
     }
 
-    void requestStop() { engineState_->stopSignal = true; }
+    void requestStop() { state_->stopSignal = true; }
 
 private:
-    std::vector<std::shared_ptr<engine::StartupStep>> startupSteps_;
-    std::vector<std::shared_ptr<engine::RenderStep>> renderSteps_;
-    std::vector<std::shared_ptr<engine::ShutdownStep>> shutdownSteps_;
-    std::shared_ptr<engine::State> engineState_ =
-        std::make_shared<engine::State>();
+    std::vector<std::shared_ptr<engine::StartupStep<TState>>> startupSteps_;
+    std::vector<std::shared_ptr<engine::RenderStep<TState>>> renderSteps_;
+    std::vector<std::shared_ptr<engine::ShutdownStep<TState>>> shutdownSteps_;
+    std::shared_ptr<TState> state_ = std::make_shared<TState>();
 
     void startup() {
         for (const auto& step : startupSteps_) {
-            step->onStartup(engineState_);
+            step->onStartup(state_);
         }
         startupSteps_.clear();
     }
 
     void continouslyRenderFrames() {
-        while (!glfw::windowShouldClose(engineState_->window) &&
-               !engineState_->stopSignal) {
+        while (!glfw::windowShouldClose(state_->window) &&
+               !state_->stopSignal) {
             glfw::pollEvents();
-            if (glfw::windowAttributeIsError(engineState_->window)) {
+            if (glfw::windowAttributeIsError(state_->window)) {
                 ImGui_ImplGlfw_Sleep(10);
                 continue;
             }
@@ -72,10 +76,10 @@ private:
 
     void shutdown() {
         for (const auto& step : shutdownSteps_) {
-            step->onShutdown(engineState_);
+            step->onShutdown(state_);
         }
         shutdownSteps_.clear();
-        engineState_.reset();
+        state_.reset();
     }
 
     void renderFrame() {
@@ -84,12 +88,12 @@ private:
         ImGui::NewFrame();
 
         for (const auto& step : renderSteps_) {
-            step->onRender(engineState_);
+            step->onRender(state_);
         }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfw::swapBuffers(engineState_->window);
+        glfw::swapBuffers(state_->window);
     }
 };
 

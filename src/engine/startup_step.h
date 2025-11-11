@@ -7,10 +7,11 @@
 
 namespace engine {
 
-class StartupStep : public virtual engine::Step {
+template <typename TState>
+    requires std::derived_from<TState, engine::State>
+class StartupStep : public virtual engine::Step<TState> {
 public:
-    virtual void onStartup(
-        const std::shared_ptr<engine::State>& engineState) = 0;
+    virtual void onStartup(const std::shared_ptr<TState>& state) = 0;
 };
 
 }
