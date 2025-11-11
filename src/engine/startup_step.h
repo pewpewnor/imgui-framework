@@ -1,11 +1,11 @@
 #pragma once
 
 #include "rigging.h"
-#include "stage.h"
+#include "step.h"
 
 namespace engine {
 
-class StartupStage : public virtual engine::Stage {
+class StartupStep : public virtual engine::Step {
 public:
     virtual void onStartup(const std::shared_ptr<engine::Rigging>& rigging) = 0;
 };

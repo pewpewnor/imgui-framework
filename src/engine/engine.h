@@ -9,19 +9,19 @@
 #include <vector>
 
 #include "glfw_bindings.h"
-#include "render_stage.h"
+#include "render_step.h"
 #include "rigging.h"
-#include "shutdown_stage.h"
-#include "startup_stage.h"
+#include "shutdown_step.h"
+#include "startup_step.h"
 
 namespace engine {
 
 class Engine {
 public:
     void run() {
-        assert(startupStages_.size() > 0 &&
+        assert(startupSteps_.size() > 0 &&
                "GLFW and ImGui needs to have a startup");
-        assert(shutdownStages_.size() > 0 &&
+        assert(shutdownSteps_.size() > 0 &&
                "GLFW and ImGui needs to have a shutdown");
 
         startup();
@@ -29,32 +29,32 @@ public:
         shutdown();
     }
 
-    void addStartupStage(const std::shared_ptr<engine::StartupStage>& stage) {
-        startupStages_.push_back(stage);
+    void addStartupStep(const std::shared_ptr<engine::StartupStep>& step) {
+        startupSteps_.push_back(step);
     }
 
-    void addRenderStage(const std::shared_ptr<engine::RenderLayer>& stage) {
-        renderStages_.push_back(stage);
+    void addRenderStep(const std::shared_ptr<engine::RenderStep>& step) {
+        renderSteps_.push_back(step);
     }
 
-    void addShutdownStage(const std::shared_ptr<engine::ShutdownStage>& stage) {
-        shutdownStages_.push_back(stage);
+    void addShutdownStep(const std::shared_ptr<engine::ShutdownStep>& step) {
+        shutdownSteps_.push_back(step);
     }
 
     void requestStop() { rigging_->stopSignal = true; }
 
 private:
-    std::vector<std::shared_ptr<engine::StartupStage>> startupStages_;
-    std::vector<std::shared_ptr<engine::RenderLayer>> renderStages_;
-    std::vector<std::shared_ptr<engine::ShutdownStage>> shutdownStages_;
+    std::vector<std::shared_ptr<engine::StartupStep>> startupSteps_;
+    std::vector<std::shared_ptr<engine::RenderStep>> renderSteps_;
+    std::vector<std::shared_ptr<engine::ShutdownStep>> shutdownSteps_;
     std::shared_ptr<engine::Rigging> rigging_ =
         std::make_shared<engine::Rigging>();
 
     void startup() {
-        for (const auto& stage : startupStages_) {
-            stage->onStartup(rigging_);
+        for (const auto& step : startupSteps_) {
+            step->onStartup(rigging_);
         }
-        startupStages_.clear();
+        startupSteps_.clear();
     }
 
     void continouslyRenderFrames() {
@@ -67,14 +67,14 @@ private:
             }
             renderFrame();
         }
-        renderStages_.clear();
+        renderSteps_.clear();
     }
 
     void shutdown() {
-        for (const auto& stage : shutdownStages_) {
-            stage->onShutdown(rigging_);
+        for (const auto& step : shutdownSteps_) {
+            step->onShutdown(rigging_);
         }
-        shutdownStages_.clear();
+        shutdownSteps_.clear();
         rigging_.reset();
     }
 
@@ -83,8 +83,8 @@ private:
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        for (const auto& stage : renderStages_) {
-            stage->onRender(rigging_);
+        for (const auto& step : renderSteps_) {
+            step->onRender(rigging_);
         }
 
         ImGui::Render();

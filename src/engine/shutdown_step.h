@@ -1,11 +1,11 @@
 #pragma once
 
 #include "rigging.h"
-#include "stage.h"
+#include "step.h"
 
 namespace engine {
 
-class ShutdownStage : public virtual engine::Stage {
+class ShutdownStep : public virtual engine::Step {
 public:
     virtual void onShutdown(
         const std::shared_ptr<engine::Rigging>& rigging) = 0;

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "startup_stage.h"
+#include "startup_step.h"
 
 namespace surface {
 
-class StartupGlfwImGui : public engine::StartupStage {
+class StartupGlfwImGui : public engine::StartupStep {
 public:
     StartupGlfwImGui(const std::string& title, int width, int height,
                      bool vsync);

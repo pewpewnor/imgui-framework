@@ -11,7 +11,7 @@
 #include "engine/startup_glfw_imgui.h"
 #include "imgui.h"
 
-class DemoLayer : public engine::RenderLayer {
+class DemoLayer : public engine::RenderStep {
 public:
     DemoLayer()
         : show_demo_window_(true),
@@ -65,11 +65,11 @@ private:
 };
 
 void Application::run() {
-    engine_.addStartupStage(std::make_shared<surface::StartupGlfwImGui>(
+    engine_.addStartupStep(std::make_shared<surface::StartupGlfwImGui>(
         "Example App", 1280, 720, true));
-    engine_.addShutdownStage(std::make_shared<surface::ShutdownGlfwImGui>());
+    engine_.addShutdownStep(std::make_shared<surface::ShutdownGlfwImGui>());
 
-    engine_.addRenderStage(std::make_shared<DemoLayer>());
+    engine_.addRenderStep(std::make_shared<DemoLayer>());
 
     engine_.run();
 }
