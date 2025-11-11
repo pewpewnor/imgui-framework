@@ -15,8 +15,15 @@ add_requires("imgui", { configs = { glfw_opengl3 = true } })
 add_requires("glfw")
 add_requires("opengl")
 
-target("project-name")
+
+target("engine")
+    set_kind("static")
+    add_files("engine/**.cpp")
+    add_includedirs(".", { public = true })
+    add_packages("imgui", "glfw", "opengl")
+
+target("app")
     set_kind("binary")
-    add_files("src/engine/*.cpp")
-    add_files("src/**.cpp")
+    add_files("app/**.cpp")
+    add_deps("engine")
     add_packages("imgui", "glfw", "opengl")
