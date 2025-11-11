@@ -19,15 +19,13 @@ namespace engine {
 class Engine {
 public:
     void run() {
+        assert(startupLayers_.size() > 0 &&
+               "GLFW and ImGui needs to have a startup");
+        assert(shutdownLayers_.size() > 0 &&
+               "GLFW and ImGui needs to have a shutdown");
+
         startup();
-        while (!shouldStop()) {
-            glfw::pollEvents();
-            if (glfw::windowAttributeIsError(rigging_->window)) {
-                ImGui_ImplGlfw_Sleep(10);
-                continue;
-            }
-            render();
-        }
+        continouslyRenderFrames();
         shutdown();
     }
 
@@ -53,15 +51,34 @@ private:
         std::make_shared<engine::Rigging>();
 
     void startup() {
-        assert(startupLayers_.size() > 0 &&
-               "GLFW and ImGui needs to be initialized");
-
         for (const auto& layer : startupLayers_) {
             layer->execute(rigging_);
         }
+        startupLayers_.clear();
     }
 
-    void render() {
+    void continouslyRenderFrames() {
+        while (!glfw::windowShouldClose(rigging_->window) &&
+               !rigging_->stopSignal) {
+            glfw::pollEvents();
+            if (glfw::windowAttributeIsError(rigging_->window)) {
+                ImGui_ImplGlfw_Sleep(10);
+                continue;
+            }
+            renderFrame();
+        }
+        renderLayers_.clear();
+    }
+
+    void shutdown() {
+        for (const auto& layer : shutdownLayers_) {
+            layer->execute(rigging_);
+        }
+        shutdownLayers_.clear();
+        rigging_.reset();
+    }
+
+    void renderFrame() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -73,25 +90,6 @@ private:
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfw::swapBuffers(rigging_->window);
-    }
-
-    void shutdown() {
-        renderLayers_.clear();
-        for (const auto& layer : shutdownLayers_) {
-            layer->execute(rigging_);
-        }
-        shutdownLayers_.clear();
-
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        ImGui::DestroyContext();
-        rigging_.reset();
-        glfw::terminate();
-    }
-
-    bool shouldStop() {
-        return glfw::windowShouldClose(rigging_->window) ||
-               rigging_->stopSignal;
     }
 };
 

@@ -8,8 +8,9 @@
 
 #include "engine/render_layer.h"
 #include "engine/rigging.h"
+#include "engine/shutdown_glfw_imgui.h"
+#include "engine/startup_glfw_imgui.h"
 #include "imgui.h"
-#include "init_glfw_imgui.h"
 
 class DemoLayer : public engine::RenderLayer {
 public:
@@ -65,8 +66,9 @@ private:
 };
 
 void Application::run() {
-    engine_.addStartupLayer(std::make_shared<surface::InitGlfwImGui>(
+    engine_.addStartupLayer(std::make_shared<surface::StartupGlfwImGui>(
         "Example App", 1280, 720, true));
+    engine_.addShutdownLayer(std::make_shared<surface::ShutdownGlfwImGui>());
 
     engine_.addRenderLayer(std::make_shared<DemoLayer>());
 

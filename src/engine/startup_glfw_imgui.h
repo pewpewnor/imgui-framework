@@ -1,12 +1,13 @@
 #pragma once
 
-#include "engine/startup_layer.h"
+#include "startup_layer.h"
 
 namespace surface {
 
-class InitGlfwImGui : public engine::StartupLayer {
+class StartupGlfwImGui : public engine::StartupLayer {
 public:
-    InitGlfwImGui(const std::string& title, int width, int height, bool vsync);
+    StartupGlfwImGui(const std::string& title, int width, int height,
+                     bool vsync);
 
     void execute(const std::shared_ptr<engine::Rigging>& rigging) override;
 
