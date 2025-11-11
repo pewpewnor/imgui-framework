@@ -1,20 +1,25 @@
 #include "application.h"
 
-#include "engine/glfw_imgui_surface.h"
+#include "engine/node.h"
 
-class RenderDemo : public engine::RenderStep<SharedState> {
+class DemoWindow : public engine::Node<SharedState> {
 public:
-    RenderDemo(const std::shared_ptr<SharedState>& state)
-        : engine::Step<SharedState>(state),
-          clear_color_{0.45F, 0.55F, 0.60F, 1.0F},
-          counter_(0),
-          slider_value_(0.0F) {}
+    DemoWindow(const std::shared_ptr<SharedState>& state)
+        : engine::Node<SharedState>(state) {}
 
-    void onRender() override {
+    void render() override { ImGui::ShowDemoWindow(&state->showDemoWindow); }
+};
+
+class ExampleWindow : public engine::Node<SharedState> {
+public:
+    ExampleWindow(const std::shared_ptr<SharedState>& state)
+        : engine::Node<SharedState>(state), demoWindow_(DemoWindow(state)) {}
+
+    void render() override {
         ImGuiIO& imguiIO = ImGui::GetIO();
 
         if (state->showDemoWindow) {
-            ImGui::ShowDemoWindow(&state->showDemoWindow);
+            demoWindow_.render();
         }
 
         ImGui::Begin("Hello, world!");
@@ -49,23 +54,16 @@ public:
     }
 
 private:
-    ImVec4 clear_color_;
-    int counter_;
-    float slider_value_;
+    DemoWindow demoWindow_;
+    ImVec4 clear_color_ = {0.45F, 0.55F, 0.60F, 1.0F};
+    int counter_ = 0;
+    float slider_value_ = 0.0F;
 };
 
 void Application::run() {
     auto state = std::make_shared<SharedState>();
+    auto demoWindow = std::make_shared<ExampleWindow>(state);
 
-    engine_ = std::make_unique<engine::Engine<SharedState>>(state);
-
-    auto glfwImguiSurface =
-        std::make_shared<engine::GlfwImguiSurface<SharedState>>(
-            state, "Example App", 1280, 720, true);
-    engine_->pushStartupStep(glfwImguiSurface);
-    engine_->pushShutdownStep(glfwImguiSurface);
-
-    engine_->pushRenderStep(std::make_shared<RenderDemo>(state));
-
-    engine_->run();
+    engine_.initialize(demoWindow, state, "Example App", 1280, 720, true);
+    engine_.run();
 }
