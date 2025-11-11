@@ -24,8 +24,8 @@ public:
           vsync_(vsync) {}
 
     void onStartup() override {
-        initializeGlfw(this->state);
-        initializeImGui(this->state);
+        initializeGlfw();
+        initializeImGui();
     }
 
 private:
@@ -35,7 +35,7 @@ private:
     bool vsync_ = true;
     float scale_ = 1;
 
-    void initializeGlfw(const std::shared_ptr<TState>& state) {
+    void initializeGlfw() {
         glfw::setErrorCallback([](int errorCode, const char* description) {
             std::cerr << "GLFW Error " << errorCode << ": " << description
                       << std::endl;
@@ -48,15 +48,15 @@ private:
         scale_ = ImGui_ImplGlfw_GetContentScaleForMonitor(
             glfw::getPrimaryMonitor().get());
 
-        state->window = glfw::createWindow(
+        this->state->window = glfw::createWindow(
             static_cast<int>(static_cast<float>(width_) * scale_),
             static_cast<int>(static_cast<float>(height_) * scale_), title_);
 
-        glfw::makeContextCurrent(state->window);
+        glfw::makeContextCurrent(this->state->window);
         glfw::switchVsync(vsync_);
     }
 
-    void initializeImGui(const std::shared_ptr<TState>& state) const {
+    void initializeImGui() const {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -68,7 +68,7 @@ private:
         ImGui::StyleColorsDark();
         ImGui::GetStyle().ScaleAllSizes(scale_);
 
-        if (!ImGui_ImplGlfw_InitForOpenGL(state->window.get(), true)) {
+        if (!ImGui_ImplGlfw_InitForOpenGL(this->state->window.get(), true)) {
             throw std::runtime_error("failed to initialize ImGui GLFW backend");
         }
 
