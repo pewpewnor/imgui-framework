@@ -1,11 +1,5 @@
 #include "glfw_bindings.h"
 
-#include <GLFW/glfw3.h>
-
-#include <cstdlib>
-#include <memory>
-#include <stdexcept>
-
 bool glfw::init() { return glfwInit() == GLFW_TRUE; }
 
 void glfw::setErrorCallback(GLFWerrorfun callback) {

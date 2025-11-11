@@ -1,8 +1,7 @@
 #pragma once
 
-#include <concepts>
-
 #include "state.h"
+
 namespace engine {
 
 template <typename TState>

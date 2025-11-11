@@ -1,15 +1,6 @@
 #include "application.h"
 
-#include <GL/gl.h>
-#include <GLFW/glfw3.h>
-
-#include <memory>
-#include <string>
-
 #include "engine/glfw_imgui_surface.h"
-#include "engine/render_step.h"
-#include "engine/step.h"
-#include "imgui.h"
 
 class RenderDemo : public engine::RenderStep<SharedState> {
 public:

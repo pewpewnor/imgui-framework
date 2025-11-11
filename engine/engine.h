@@ -4,15 +4,11 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include <cassert>
-#include <memory>
 #include <vector>
 
-#include "glfw_bindings.h"
 #include "render_step.h"
 #include "shutdown_step.h"
 #include "startup_step.h"
-#include "state.h"
 
 namespace engine {
 
