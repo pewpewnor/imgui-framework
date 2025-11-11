@@ -6,7 +6,7 @@
 #include "imgui_impl_opengl3.h"
 #include "rigging.h"
 
-void surface::ShutdownGlfwImGui::execute(
+void surface::ShutdownGlfwImGui::onShutdown(
     const std::shared_ptr<engine::Rigging>& rigging) {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

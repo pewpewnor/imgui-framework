@@ -9,19 +9,19 @@
 #include <vector>
 
 #include "glfw_bindings.h"
-#include "render_layer.h"
+#include "render_stage.h"
 #include "rigging.h"
-#include "shutdown_layer.h"
-#include "startup_layer.h"
+#include "shutdown_stage.h"
+#include "startup_stage.h"
 
 namespace engine {
 
 class Engine {
 public:
     void run() {
-        assert(startupLayers_.size() > 0 &&
+        assert(startupStages_.size() > 0 &&
                "GLFW and ImGui needs to have a startup");
-        assert(shutdownLayers_.size() > 0 &&
+        assert(shutdownStages_.size() > 0 &&
                "GLFW and ImGui needs to have a shutdown");
 
         startup();
@@ -29,32 +29,32 @@ public:
         shutdown();
     }
 
-    void addStartupLayer(const std::shared_ptr<engine::StartupLayer>& layer) {
-        startupLayers_.push_back(layer);
+    void addStartupStage(const std::shared_ptr<engine::StartupStage>& stage) {
+        startupStages_.push_back(stage);
     }
 
-    void addRenderLayer(const std::shared_ptr<engine::RenderLayer>& layer) {
-        renderLayers_.push_back(layer);
+    void addRenderStage(const std::shared_ptr<engine::RenderLayer>& stage) {
+        renderStages_.push_back(stage);
     }
 
-    void addShutdownLayer(const std::shared_ptr<engine::ShutdownLayer>& layer) {
-        shutdownLayers_.push_back(layer);
+    void addShutdownStage(const std::shared_ptr<engine::ShutdownStage>& stage) {
+        shutdownStages_.push_back(stage);
     }
 
     void requestStop() { rigging_->stopSignal = true; }
 
 private:
-    std::vector<std::shared_ptr<engine::StartupLayer>> startupLayers_;
-    std::vector<std::shared_ptr<engine::RenderLayer>> renderLayers_;
-    std::vector<std::shared_ptr<engine::ShutdownLayer>> shutdownLayers_;
+    std::vector<std::shared_ptr<engine::StartupStage>> startupStages_;
+    std::vector<std::shared_ptr<engine::RenderLayer>> renderStages_;
+    std::vector<std::shared_ptr<engine::ShutdownStage>> shutdownStages_;
     std::shared_ptr<engine::Rigging> rigging_ =
         std::make_shared<engine::Rigging>();
 
     void startup() {
-        for (const auto& layer : startupLayers_) {
-            layer->execute(rigging_);
+        for (const auto& stage : startupStages_) {
+            stage->onStartup(rigging_);
         }
-        startupLayers_.clear();
+        startupStages_.clear();
     }
 
     void continouslyRenderFrames() {
@@ -67,14 +67,14 @@ private:
             }
             renderFrame();
         }
-        renderLayers_.clear();
+        renderStages_.clear();
     }
 
     void shutdown() {
-        for (const auto& layer : shutdownLayers_) {
-            layer->execute(rigging_);
+        for (const auto& stage : shutdownStages_) {
+            stage->onShutdown(rigging_);
         }
-        shutdownLayers_.clear();
+        shutdownStages_.clear();
         rigging_.reset();
     }
 
@@ -83,8 +83,8 @@ private:
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        for (const auto& layer : renderLayers_) {
-            layer->render(rigging_);
+        for (const auto& stage : renderStages_) {
+            stage->onRender(rigging_);
         }
 
         ImGui::Render();

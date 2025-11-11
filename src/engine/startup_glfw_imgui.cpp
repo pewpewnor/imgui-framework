@@ -10,7 +10,7 @@ surface::StartupGlfwImGui::StartupGlfwImGui(const std::string& title, int width,
                                             int height, bool vsync)
     : title_(title), width_(width), height_(height), vsync_(vsync) {}
 
-void surface::StartupGlfwImGui::execute(
+void surface::StartupGlfwImGui::onStartup(
     const std::shared_ptr<engine::Rigging>& rigging) {
     initializeGlfw(rigging);
     initializeImGui(rigging);

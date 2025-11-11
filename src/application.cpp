@@ -6,7 +6,6 @@
 #include <memory>
 #include <string>
 
-#include "engine/render_layer.h"
 #include "engine/rigging.h"
 #include "engine/shutdown_glfw_imgui.h"
 #include "engine/startup_glfw_imgui.h"
@@ -20,7 +19,7 @@ public:
           counter_(0),
           slider_value_(0.0F) {}
 
-    void render(const std::shared_ptr<engine::Rigging>& rigging) override {
+    void onRender(const std::shared_ptr<engine::Rigging>& rigging) override {
         ImGuiIO& imguiIO = ImGui::GetIO();
 
         if (show_demo_window_) {
@@ -66,11 +65,11 @@ private:
 };
 
 void Application::run() {
-    engine_.addStartupLayer(std::make_shared<surface::StartupGlfwImGui>(
+    engine_.addStartupStage(std::make_shared<surface::StartupGlfwImGui>(
         "Example App", 1280, 720, true));
-    engine_.addShutdownLayer(std::make_shared<surface::ShutdownGlfwImGui>());
+    engine_.addShutdownStage(std::make_shared<surface::ShutdownGlfwImGui>());
 
-    engine_.addRenderLayer(std::make_shared<DemoLayer>());
+    engine_.addRenderStage(std::make_shared<DemoLayer>());
 
     engine_.run();
 }

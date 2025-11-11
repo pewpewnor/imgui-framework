@@ -1,11 +1,12 @@
 #pragma once
 
-#include "shutdown_layer.h"
+#include "shutdown_stage.h"
+
 namespace surface {
 
-class ShutdownGlfwImGui : public engine::ShutdownLayer {
+class ShutdownGlfwImGui : public engine::ShutdownStage {
 public:
-    void execute(const std::shared_ptr<engine::Rigging>& rigging) override;
+    void onShutdown(const std::shared_ptr<engine::Rigging>& rigging) override;
 };
 
 }
