@@ -7,7 +7,6 @@
 .xmake/
 build/
 .cache/
-vendor/
 makefile
 build.ninja
 CMakeLists.txt

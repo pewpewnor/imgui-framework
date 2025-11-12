@@ -1,0 +1,4 @@
+[submodule "vendor/imgui-sfml"]
+	path = vendor/imgui-sfml
+	url = https://github.com/eliasdaler/imgui-sfml.git
+	branch = master
