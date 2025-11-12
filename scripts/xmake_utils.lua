@@ -1,4 +1,4 @@
-function SurpressLsan()
+function SuppressLsan()
 	after_build(function(target)
 		os.cp(
 			path.join(os.projectdir(), "scripts", "lsan.supp"),
