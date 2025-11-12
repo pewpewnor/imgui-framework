@@ -1,11 +1,11 @@
 #pragma once
 
-#include "glfw_bindings.h"
+#include "SFML/Graphics/RenderWindow.hpp"
 
 namespace engine {
 
 struct State {
-    std::shared_ptr<glfw::Window> glfwWindow;
+    std::shared_ptr<sf::RenderWindow> window;
     bool engineStopSignal = false;
 };
 

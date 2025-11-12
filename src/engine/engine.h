@@ -1,9 +1,10 @@
 #pragma once
-
+#include <imgui-SFML.h>
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
 
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/Window/Event.hpp>
 #include <vector>
 
 #include "render_step.h"
@@ -11,19 +12,17 @@
 #include "startup_step.h"
 
 namespace engine {
-
 template <typename TState>
     requires std::derived_from<TState, engine::State>
 class Engine {
 public:
-    Engine(const std::shared_ptr<TState>& state) : state_(state) {};
+    Engine(const std::shared_ptr<TState>& state) : state_(state) {}
 
     void run() {
         assert(startupSteps_.size() > 0 &&
-               "GLFW and ImGui needs to have a startup");
+               "SFML and ImGui needs to have a startup");
         assert(shutdownSteps_.size() > 0 &&
-               "GLFW and ImGui needs to have a shutdown");
-
+               "SFML and ImGui needs to have a shutdown");
         startup();
         continouslyRenderFrames();
         shutdown();
@@ -51,6 +50,7 @@ private:
     std::vector<std::shared_ptr<engine::StartupStep<TState>>> startupSteps_;
     std::vector<std::shared_ptr<engine::RenderStep<TState>>> renderSteps_;
     std::vector<std::shared_ptr<engine::ShutdownStep<TState>>> shutdownSteps_;
+    sf::Clock deltaClock_;
 
     void startup() {
         for (const auto& step : startupSteps_) {
@@ -60,13 +60,15 @@ private:
     }
 
     void continouslyRenderFrames() {
-        while (!glfw::windowShouldClose(state_->glfwWindow) &&
-               !state_->engineStopSignal) {
-            glfw::pollEvents();
-            if (glfw::windowAttributeIsError(state_->glfwWindow)) {
-                ImGui_ImplGlfw_Sleep(10);
-                continue;
+        while (state_->window->isOpen() && !state_->engineStopSignal) {
+            while (const auto event = state_->window->pollEvent()) {
+                ImGui::SFML::ProcessEvent(*state_->window, *event);
+
+                if (event->template is<sf::Event::Closed>()) {
+                    state_->window->close();
+                }
             }
+
             renderFrame();
         }
         renderSteps_.clear();
@@ -81,18 +83,15 @@ private:
     }
 
     void renderFrame() {
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        ImGui::SFML::Update(*state_->window, deltaClock_.restart());
 
         for (const auto& step : renderSteps_) {
             step->onRender();
         }
 
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfw::swapBuffers(state_->glfwWindow);
+        state_->window->clear();
+        ImGui::SFML::Render(*state_->window);
+        state_->window->display();
     }
 };
-
 }

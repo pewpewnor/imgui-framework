@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include "engine/glfw_imgui_surface.h"
+#include "engine/surface.h"
 
 class RenderDemo : public engine::RenderStep<SharedState> {
 public:
@@ -37,15 +37,15 @@ public:
                                    .c_str());
         ImGui::End();
 
-        int displayWidth = 0;
-        int displayHeight = 0;
-        glfwGetFramebufferSize(state->glfwWindow.get(), &displayWidth,
-                               &displayHeight);
-        glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(clear_color_.x * clear_color_.w,
-                     clear_color_.y * clear_color_.w,
-                     clear_color_.z * clear_color_.w, clear_color_.w);
-        glClear(GL_COLOR_BUFFER_BIT);
+        // int displayWidth = 0;
+        // int displayHeight = 0;
+        // glfwGetFramebufferSize(state->window.get(), &displayWidth,
+        //                        &displayHeight);
+        // glViewport(0, 0, displayWidth, displayHeight);
+        // glClearColor(clear_color_.x * clear_color_.w,
+        //              clear_color_.y * clear_color_.w,
+        //              clear_color_.z * clear_color_.w, clear_color_.w);
+        // glClear(GL_COLOR_BUFFER_BIT);
     }
 
 private:
@@ -59,11 +59,10 @@ void Application::run() {
 
     engine_ = std::make_unique<engine::Engine<SharedState>>(state);
 
-    auto glfwImguiSurface =
-        std::make_shared<engine::GlfwImguiSurface<SharedState>>(
-            state, "Example App", 1280, 720, true);
-    engine_->pushStartupStep(glfwImguiSurface);
-    engine_->pushShutdownStep(glfwImguiSurface);
+    auto surface = std::make_shared<engine::Surface<SharedState>>(
+        state, "Example App", 1280, 720, true);
+    engine_->pushStartupStep(surface);
+    engine_->pushShutdownStep(surface);
 
     engine_->pushRenderStep(std::make_shared<RenderDemo>(state));
 
