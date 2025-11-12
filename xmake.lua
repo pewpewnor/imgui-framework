@@ -1,5 +1,3 @@
-includes("scripts/xmake_utils.lua")
-
 add_rules("mode.debug", "mode.release")
 if is_mode("debug") then
 	set_policy("build.sanitizer.address", true)
