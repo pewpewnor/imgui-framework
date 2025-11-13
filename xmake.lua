@@ -48,10 +48,8 @@ package("imgui-sfml")
     end)
 
     on_install("macosx", "linux", "windows", "mingw", function (package)
-        local imgui_version = ""
-        if package:version():eq("v3.0") then
-            imgui_version = " >=1.91.1 <=1.91.9"
-        end
+        local imgui_dep = package:dep("imgui")
+        local imgui_version = imgui_dep and " " .. imgui_dep:version_str() or ""
         io.writefile("xmake.lua", string.format([[
             add_rules("mode.release", "mode.debug")
             add_requires("imgui%s")
