@@ -104,6 +104,7 @@ add_requires("imgui-sfml 3.0.0")
 
 target("engine")
     set_kind("static")
+    add_files("src/engine/**.cpp")
     add_packages("imgui-sfml")
 
 target("app")
