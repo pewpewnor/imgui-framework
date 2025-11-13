@@ -2,6 +2,35 @@
 
 KeyPressDetector::KeyPressDetector(sf::Keyboard::Key key) : key_(key) {}
 
+bool KeyPressDetector::combineKeyPresses(KeyPressDetector& keyDetector1,
+                                         KeyPressDetector& keyDetector2,
+                                         bool state) {
+    if (keyDetector1.hasBeenPressed() || keyDetector2.hasBeenPressed()) {
+        return !state;
+    }
+    return state;
+}
+
+bool KeyPressDetector::combineKeyPressAndKeyHeld(KeyPressDetector& keyDetector1,
+                                                 KeyPressDetector& keyDetector2,
+                                                 bool state) {
+    if (keyDetector2.hasStoppedBeingPressed()) {
+        return false;
+    }
+    if (keyDetector2.isBeingHeld()) {
+        return true;
+    }
+    if (keyDetector1.hasBeenPressed()) {
+        return !state;
+    }
+    return state;
+}
+
+bool combineKeyHelds(KeyPressDetector& keyDetector1,
+                     KeyPressDetector& keyDetector2) {
+    return keyDetector1.isBeingHeld() || keyDetector2.isBeingHeld();
+}
+
 bool KeyPressDetector::hasBeenPressed() {
     return getStatus() == KeyPressStatus::PressStart;
 }

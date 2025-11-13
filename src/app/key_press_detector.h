@@ -12,12 +12,7 @@ public:
      * showWindow);
      */
     static bool combineKeyPresses(KeyPressDetector& keyDetector1,
-                                  KeyPressDetector& keyDetector2, bool state) {
-        if (keyDetector1.hasBeenPressed() || keyDetector2.hasBeenPressed()) {
-            return !state;
-        }
-        return state;
-    }
+                                  KeyPressDetector& keyDetector2, bool state);
 
     /**
      *  @brief use this for a single state to be related to multiple keys
@@ -26,27 +21,14 @@ public:
      */
     static bool combineKeyPressAndKeyHeld(KeyPressDetector& keyDetector1,
                                           KeyPressDetector& keyDetector2,
-                                          bool state) {
-        if (keyDetector2.hasStoppedBeingPressed()) {
-            return false;
-        }
-        if (keyDetector2.isBeingHeld()) {
-            return true;
-        }
-        if (keyDetector1.hasBeenPressed()) {
-            return !state;
-        }
-        return state;
-    }
+                                          bool state);
 
     /**
      *  @brief use this for a single state to be related to multiple keys
      *  @code showWindow = KeyPressDetector::combineKeyHelds(k1, k2);
      */
     static bool combineKeyHelds(KeyPressDetector& keyDetector1,
-                                KeyPressDetector& keyDetector2) {
-        return keyDetector1.isBeingHeld() || keyDetector2.isBeingHeld();
-    }
+                                KeyPressDetector& keyDetector2);
 
     /**
      *  @brief a single state should only be related to one key
