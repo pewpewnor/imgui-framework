@@ -2,7 +2,9 @@
 
 #include <cmath>
 
+#include "SFML/Window/Keyboard.hpp"
 #include "app/globals.h"
+#include "app/key_press_detector.h"
 #include "engine/surface.h"
 
 class RenderDemo : public engine::RenderStep {
@@ -11,6 +13,11 @@ public:
         ImGuiIO& imguiIO = ImGui::GetIO();
 
         ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = bg_color_;
+
+#ifndef NDEBUG
+        appState.showDemoWindow = KeyPressDetector::combineKeyPressAndKeyHeld(
+            f1_, f2_, appState.showDemoWindow);
+#endif
 
         if (appState.showDemoWindow) {
             ImGui::ShowDemoWindow(&appState.showDemoWindow);
@@ -38,6 +45,8 @@ public:
     }
 
 private:
+    KeyPressDetector f1_ = KeyPressDetector(sf::Keyboard::Key::F1);
+    KeyPressDetector f2_ = KeyPressDetector(sf::Keyboard::Key::F2);
     ImVec4 bg_color_ = {0.45F, 0.55F, 0.60F, 1.0F};
     int counter_ = 0;
     float slider_value_ = 0;
