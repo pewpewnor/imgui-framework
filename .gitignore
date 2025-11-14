@@ -3,11 +3,10 @@
 .vscode/
 .DS_Store
 
-# xmake cache
+# builds
 .xmake/
 build/
 .cache/
-# xmake generated project config
 makefile
 build.ninja
 CMakeLists.txt

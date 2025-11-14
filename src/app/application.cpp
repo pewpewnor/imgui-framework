@@ -1,27 +1,33 @@
 #include "application.h"
 
-#include "engine/glfw_imgui_surface.h"
+#include <cmath>
 
-class RenderDemo : public engine::RenderStep<SharedState> {
+#include "SFML/Window/Keyboard.hpp"
+#include "app/globals.h"
+#include "app/key_press_detector.h"
+#include "engine/surface.h"
+
+class RenderDemo : public engine::RenderStep {
 public:
-    RenderDemo(const std::shared_ptr<SharedState>& state)
-        : engine::Step<SharedState>(state),
-          clear_color_{0.45F, 0.55F, 0.60F, 1.0F},
-          counter_(0),
-          slider_value_(0.0F) {}
-
     void onRender() override {
         ImGuiIO& imguiIO = ImGui::GetIO();
 
-        if (state->showDemoWindow) {
-            ImGui::ShowDemoWindow(&state->showDemoWindow);
+        ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = bg_color_;
+
+#ifndef NDEBUG
+        appState.showDemoWindow = KeyPressDetector::combineKeyPressAndKeyHeld(
+            f1_, f2_, appState.showDemoWindow);
+#endif
+
+        if (appState.showDemoWindow) {
+            ImGui::ShowDemoWindow(&appState.showDemoWindow);
         }
 
         ImGui::Begin("Hello, world!");
         ImGui::TextUnformatted("This is some useful text.");
-        ImGui::Checkbox("Demo Window", &state->showDemoWindow);
+        ImGui::Checkbox("Demo Window", &appState.showDemoWindow);
         ImGui::SliderFloat("float", &slider_value_, 0.0F, 1.0F);
-        ImGui::ColorEdit3("clear color", &clear_color_.x);
+        ImGui::ColorEdit3("Background color", &bg_color_.x);
 
         if (ImGui::Button("Button")) {
             counter_++;
@@ -36,36 +42,23 @@ public:
                                 std::to_string(imguiIO.Framerate) + " FPS)")
                                    .c_str());
         ImGui::End();
-
-        int displayWidth = 0;
-        int displayHeight = 0;
-        glfwGetFramebufferSize(state->glfwWindow.get(), &displayWidth,
-                               &displayHeight);
-        glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(clear_color_.x * clear_color_.w,
-                     clear_color_.y * clear_color_.w,
-                     clear_color_.z * clear_color_.w, clear_color_.w);
-        glClear(GL_COLOR_BUFFER_BIT);
     }
 
 private:
-    ImVec4 clear_color_;
-    int counter_;
-    float slider_value_;
+    KeyPressDetector f1_ = KeyPressDetector(sf::Keyboard::Key::F1);
+    KeyPressDetector f2_ = KeyPressDetector(sf::Keyboard::Key::F2);
+    ImVec4 bg_color_ = {0.45F, 0.55F, 0.60F, 1.0F};
+    int counter_ = 0;
+    float slider_value_ = 0;
 };
 
 void Application::run() {
-    auto state = std::make_shared<SharedState>();
+    auto surface =
+        std::make_shared<engine::Surface>("Example App", 1280, 720, true);
+    engine_.pushStartupStep(surface);
+    engine_.pushShutdownStep(surface);
 
-    engine_ = std::make_unique<engine::Engine<SharedState>>(state);
+    engine_.pushRenderStep(std::make_shared<RenderDemo>());
 
-    auto glfwImguiSurface =
-        std::make_shared<engine::GlfwImguiSurface<SharedState>>(
-            state, "Example App", 1280, 720, true);
-    engine_->pushStartupStep(glfwImguiSurface);
-    engine_->pushShutdownStep(glfwImguiSurface);
-
-    engine_->pushRenderStep(std::make_shared<RenderDemo>(state));
-
-    engine_->run();
+    engine_.run();
 }

@@ -4,9 +4,7 @@
 
 namespace engine {
 
-template <typename TState>
-    requires std::derived_from<TState, engine::State>
-class ShutdownStep : public virtual engine::Step<TState> {
+class ShutdownStep : public virtual engine::Step {
 public:
     virtual void onShutdown() = 0;
 };
