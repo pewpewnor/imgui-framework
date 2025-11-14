@@ -41,6 +41,10 @@ bool KeyPressDetector::isBeingHeld() {
            status == KeyPressStatus::PressOngoing;
 }
 
+bool KeyPressDetector::hasStoppedBeingPressed() {
+    return getStatus() == KeyPressStatus::PressStop;
+}
+
 KeyPressDetector::KeyPressStatus KeyPressDetector::getStatus() {
     if (sf::Keyboard::isKeyPressed(key_)) {
         if (!beingHeld_) {
@@ -52,8 +56,4 @@ KeyPressDetector::KeyPressStatus KeyPressDetector::getStatus() {
     bool prevBeingHeld = beingHeld_;
     beingHeld_ = false;
     return prevBeingHeld ? KeyPressStatus::PressStop : KeyPressStatus::NoPress;
-}
-
-bool KeyPressDetector::hasStoppedBeingPressed() {
-    return getStatus() == KeyPressStatus::PressStop;
 }

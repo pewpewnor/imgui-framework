@@ -7,6 +7,30 @@
 #include "app/key_press_detector.h"
 #include "engine/surface.h"
 
+bool customButton(const char* label, ImVec2 size = ImVec2(200, 60)) {
+    ImGui::PushStyleColor(ImGuiCol_Button,
+                          ImVec4(0.20F, 0.30F, 0.60F, 1.0F));  // normal
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                          ImVec4(0.25F, 0.40F, 0.80F, 1.0F));  // hover
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                          ImVec4(0.15F, 0.25F, 0.55F, 1.0F));  // active
+
+    ImGui::PushStyleColor(ImGuiCol_Border,
+                          ImVec4(1.0F, 1.0F, 1.0F, 0.9F));    // border color
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0F);  // round corners
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,
+                        3.0F);  // border thickness
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                        ImVec2(14, 10));  // internal padding
+
+    bool pressed = ImGui::Button(label, size);
+
+    ImGui::PopStyleVar(3);
+    ImGui::PopStyleColor(4);
+
+    return pressed;
+}
+
 class RenderDemo : public engine::RenderStep {
 public:
     void onRender() override {
@@ -29,7 +53,7 @@ public:
         ImGui::SliderFloat("float", &slider_value_, 0.0F, 1.0F);
         ImGui::ColorEdit3("Background color", &bg_color_.x);
 
-        if (ImGui::Button("Button")) {
+        if (customButton("Button")) {
             counter_++;
         }
         ImGui::SameLine();
