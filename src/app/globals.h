@@ -2,10 +2,13 @@
 
 #include <memory>
 
+#include "async_worker.h"
 #include "engine/engine_state.h"
 
 struct AppState {
     bool showDemoWindow = false;
+    AsyncWorker<std::string> sleepWorker;
+    std::string greetings;
 };
 
 namespace globals {

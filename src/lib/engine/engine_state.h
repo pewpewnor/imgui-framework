@@ -1,13 +1,16 @@
 #pragma once
 
+#include <atomic>
+
 #include "SFML/Graphics/RenderWindow.hpp"
 
 namespace engine {
 
 struct EngineState {
     sf::RenderWindow window;
-    bool stopSignal;
-    bool refreshSignal;
+
+    std::atomic<bool> stopSignal;
+    std::atomic<bool> refreshSignal;
 };
 
 }

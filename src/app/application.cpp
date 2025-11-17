@@ -1,16 +1,19 @@
 #include "application.h"
 
+#include <chrono>
 #include <cmath>
+#include <iostream>
+#include <thread>
 
 #include "SFML/Window/Keyboard.hpp"
-#include "app/globals.h"
-#include "app/key_press_detector.h"
-#include "app/style_stack.h"
 #include "engine/engine.h"
 #include "engine/engine_state.h"
 #include "engine/render_step.h"
 #include "engine/surface.h"
+#include "globals.h"
 #include "imgui.h"
+#include "key_press_detector.h"
+#include "style_stack.h"
 
 namespace components {
 
@@ -42,12 +45,24 @@ public:
         globals::appState->showDemoWindow =
             KeyPressDetector::combineKeyPressAndKeyHeld(
                 f1_, f2_, globals::appState->showDemoWindow);
+
+        if (space_.hasBeenPressed()) {
+            std::string name = "Alice";
+            globals::appState->sleepWorker.spawn([name]() {
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+                globals::appState->greetings = "Greetings from var: " + name;
+                globals::engineState->refreshSignal = true;
+                return "Greetings from result: " + name;
+            });
+            std::cout << "space pressed" << std::endl;
+        }
 #endif
     }
 
 private:
     KeyPressDetector f1_{sf::Keyboard::Key::F1};
     KeyPressDetector f2_{sf::Keyboard::Key::F2};
+    KeyPressDetector space_{sf::Keyboard::Key::Space};
 };
 
 class MyDemoWindow : public engine::RenderStep {
@@ -88,6 +103,12 @@ public:
             ("counter = " + std::to_string(counter_)).c_str());
         ImGui::TextUnformatted(
             ("infinite = " + std::to_string(infinite_++)).c_str());
+        if (globals::appState->sleepWorker.resultIsReady()) {
+            ImGui::TextUnformatted(
+                globals::appState->sleepWorker.getResultBlocking()->c_str());
+        }
+        ImGui::TextUnformatted(
+            ("The greetings: " + globals::appState->greetings).c_str());
 
         ImGui::TextUnformatted(("Application average " +
                                 std::to_string(1000.0F / imguiIO.Framerate) +
@@ -111,11 +132,11 @@ public:
     void onRender() override { ImGui::ShowDemoWindow(); }
 };
 
-void Application::execute() {
+Application::Application() {
     globals::appState = std::make_shared<AppState>();
     globals::engineState = std::make_shared<engine::EngineState>();
-
     engine_ = std::make_unique<engine::Engine>(globals::engineState);
+
     auto surface = std::make_shared<engine::Surface>(globals::engineState,
                                                      "Example App", 1280, 720);
     engine_->pushStartupStep(surface);
@@ -124,9 +145,11 @@ void Application::execute() {
     engine_->pushRenderStep(std::make_shared<HotkeysHandler>());
     engine_->pushRenderStep(std::make_shared<MyDemoWindow>());
     engine_->pushRenderStep(std::make_shared<ImguiDemoWindow>());
+}
 
-    engine_->runContinously();
+void Application::execute() { engine_->runContinously(); }
 
+Application::~Application() {
     globals::appState.reset();
     globals::engineState.reset();
 }

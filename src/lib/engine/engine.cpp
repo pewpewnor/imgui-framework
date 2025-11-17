@@ -2,7 +2,6 @@
 
 #include <SFML/System.hpp>
 
-#include "SFML/System/Time.hpp"
 #include "engine_state.h"
 
 namespace {
@@ -41,15 +40,12 @@ void engine::Engine::pushShutdownStep(
 
 void engine::Engine::startup() {
     state_->stopSignal = false;
-    state_->refreshSignal = false;
     for (const auto& step : startupSteps_) {
         step->onStartup();
     }
 }
 
 void engine::Engine::renderFramesContinously() {
-    sf::Time idleSleepTime = timePerFrameMillisecFromFps(20);
-
     while (state_->window.isOpen() && !state_->stopSignal) {
         bool hasFocus = state_->window.hasFocus();
         bool refresh = false;
@@ -59,6 +55,7 @@ void engine::Engine::renderFramesContinously() {
                 return;
             }
             if (event->is<sf::Event::FocusLost>()) {
+                refresh = true;
                 continue;
             }
             ImGui::SFML::ProcessEvent(state_->window, *event);
@@ -86,7 +83,7 @@ void engine::Engine::renderFramesContinously() {
         if (refresh) {
             renderFrame();
         } else {
-            sf::sleep(idleSleepTime);
+            sf::sleep(timePerFrameMillisecFromFps(30));
         }
     }
 }
@@ -97,7 +94,6 @@ void engine::Engine::shutdown() {
         step->onShutdown();
     }
     state_->stopSignal = false;
-    state_->refreshSignal = false;
 }
 
 void engine::Engine::renderFrame() {
