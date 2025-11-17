@@ -9,6 +9,7 @@ public:
     Step(Step&&) = default;
     Step& operator=(const Step&) = default;
     Step& operator=(Step&&) = default;
+
     virtual ~Step() = default;
 };
 

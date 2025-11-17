@@ -2,6 +2,9 @@
 
 #include "SFML/Window/Keyboard.hpp"
 
+/**
+ *  @brief do not create multiple instances for the same key
+ */
 class KeyPressDetector {
 public:
     KeyPressDetector(sf::Keyboard::Key key);

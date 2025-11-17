@@ -5,34 +5,34 @@
 #include "SFML/Window/Keyboard.hpp"
 #include "app/globals.h"
 #include "app/key_press_detector.h"
+#include "app/style_stack.h"
 #include "engine/engine.h"
 #include "engine/render_step.h"
 #include "engine/surface.h"
 #include "imgui.h"
 
-bool customButton(const char* label, ImVec2 size = ImVec2(200, 60)) {
-    ImGui::PushStyleColor(ImGuiCol_Button,
-                          ImVec4(0.20F, 0.30F, 0.60F, 1.0F));  // normal
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                          ImVec4(0.25F, 0.40F, 0.80F, 1.0F));  // hover
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                          ImVec4(0.15F, 0.25F, 0.55F, 1.0F));  // active
+namespace components {
 
-    ImGui::PushStyleColor(ImGuiCol_Border,
-                          ImVec4(1.0F, 1.0F, 1.0F, 0.9F));    // border color
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 12.0F);  // round corners
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize,
-                        3.0F);  // border thickness
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                        ImVec2(14, 10));  // internal padding
+bool customButton(const char* label, ImVec2 size = ImVec2(60, 100)) {
+    StyleStack style;
+    style.pushStyleColor(ImGuiCol_Button,
+                         ImVec4(0.20F, 0.30F, 0.60F, 1.0F));  // normal
+    style.pushStyleColor(ImGuiCol_ButtonHovered,
+                         ImVec4(0.25F, 0.40F, 0.80F, 1.0F));  // hover
+    style.pushStyleColor(ImGuiCol_ButtonActive,
+                         ImVec4(0.15F, 0.25F, 0.55F, 1.0F));  // active
 
-    bool pressed = ImGui::Button(label, size);
-
-    ImGui::PopStyleVar(3);
-    ImGui::PopStyleColor(4);
-
-    return pressed;
+    style.pushStyleColor(ImGuiCol_Border,
+                         ImVec4(1.0F, 1.0F, 1.0F, 0.9F));    // border color
+    style.pushStyleVar(ImGuiStyleVar_FrameRounding, 12.0F);  // round corners
+    style.pushStyleVar(ImGuiStyleVar_FrameBorderSize,
+                       3.0F);  // border thickness
+    style.pushStyleVar(ImGuiStyleVar_FramePadding,
+                       ImVec2(14, 10));  // internal padding
+    return ImGui::Button(label, size);
 }
+
+};
 
 class HotkeysHandler : public engine::RenderStep {
 public:
@@ -62,12 +62,14 @@ public:
         ImGui::SliderFloat("float", &slider_value_, 0.0F, 1.0F);
         ImGui::ColorEdit3("Background color", &bg_color_.x);
 
-        if (customButton("Button")) {
+        if (components::customButton("Custom Button")) {
             counter_++;
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(
             ("counter = " + std::to_string(counter_)).c_str());
+        ImGui::TextUnformatted(
+            ("infinite = " + std::to_string(infinite_++)).c_str());
 
         ImGui::TextUnformatted(("Application average " +
                                 std::to_string(1000.0F / imguiIO.Framerate) +
@@ -81,15 +83,14 @@ private:
     ImVec4 bg_color_{0.45F, 0.55F, 0.60F, 1.0F};
     int counter_ = 0;
     float slider_value_ = 0;
+    int infinite_ = 0;
 };
 
 class ImguiDemoWindow : public engine::RenderStep {
 public:
     bool shouldRender() override { return globals::appState->showDemoWindow; }
 
-    void onRender() override {
-        ImGui::ShowDemoWindow(&globals::appState->showDemoWindow);
-    }
+    void onRender() override { ImGui::ShowDemoWindow(); }
 };
 
 void Application::execute() {

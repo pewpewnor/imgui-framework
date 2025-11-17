@@ -1,5 +1,7 @@
 #include "engine.h"
 
+#include <SFML/System.hpp>
+
 void engine::Engine::initialize(
     const std::shared_ptr<engine::EngineState>& engineState) {
     engineState_ = engineState;
@@ -38,15 +40,31 @@ void engine::Engine::startup() {
 }
 
 void engine::Engine::renderFramesContinously() {
+    sf::Time idleSleepTime = sf::milliseconds(16);
+
     while (engineState_->window.isOpen() && !engineState_->stopSignal) {
+        bool refresh = false;
+
         while (const auto event = engineState_->window.pollEvent()) {
             ImGui::SFML::ProcessEvent(engineState_->window, *event);
-
             if (event->template is<sf::Event::Closed>()) {
                 engineState_->window.close();
             }
+            refresh = true;
         }
-        renderFrame();
+        if (ImGui::GetIO().WantTextInput) {
+            refresh = true;
+        }
+        if (engineState_->refreshSignal) {
+            refresh = true;
+            engineState_->refreshSignal = false;
+        }
+
+        if (refresh) {
+            renderFrame();
+        } else {
+            sf::sleep(idleSleepTime);
+        }
     }
     renderSteps_.clear();
 }
