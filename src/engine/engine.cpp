@@ -40,6 +40,8 @@ void engine::Engine::pushShutdownStep(
 }
 
 void engine::Engine::startup() {
+    state_->stopSignal = false;
+    state_->refreshSignal = false;
     for (const auto& step : startupSteps_) {
         step->onStartup();
     }
@@ -54,8 +56,7 @@ void engine::Engine::renderFramesContinously() {
 
         while (const auto event = state_->window.pollEvent()) {
             if (event->is<sf::Event::Closed>()) {
-                state_->stopSignal = true;
-                break;
+                return;
             }
             if (event->is<sf::Event::FocusLost>()) {
                 continue;
@@ -71,9 +72,6 @@ void engine::Engine::renderFramesContinously() {
                 event->is<sf::Event::MouseWheelScrolled>()) {
                 refresh = true;
             }
-        }
-        if (state_->stopSignal) {
-            break;
         }
 
         if (hasFocus && ImGui::GetIO().WantTextInput) {
@@ -91,15 +89,15 @@ void engine::Engine::renderFramesContinously() {
             sf::sleep(idleSleepTime);
         }
     }
-
-    state_->window.close();
 }
 
 void engine::Engine::shutdown() {
+    state_->window.close();
     for (const auto& step : shutdownSteps_) {
         step->onShutdown();
     }
-    *state_ = EngineState();
+    state_->stopSignal = false;
+    state_->refreshSignal = false;
 }
 
 void engine::Engine::renderFrame() {

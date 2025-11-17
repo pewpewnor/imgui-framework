@@ -10,8 +10,8 @@ struct AppState {
 
 namespace globals {
 
-inline auto appState = std::make_shared<AppState>();
+inline std::shared_ptr<AppState> appState;
 
-inline auto engineState = std::make_shared<engine::EngineState>();
+inline std::shared_ptr<engine::EngineState> engineState;
 
 };

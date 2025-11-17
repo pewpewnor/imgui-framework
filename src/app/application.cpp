@@ -7,6 +7,7 @@
 #include "app/key_press_detector.h"
 #include "app/style_stack.h"
 #include "engine/engine.h"
+#include "engine/engine_state.h"
 #include "engine/render_step.h"
 #include "engine/surface.h"
 #include "imgui.h"
@@ -111,6 +112,10 @@ public:
 };
 
 void Application::execute() {
+    globals::appState = std::make_shared<AppState>();
+    globals::engineState = std::make_shared<engine::EngineState>();
+
+    engine_ = std::make_unique<engine::Engine>(globals::engineState);
     auto surface = std::make_shared<engine::Surface>(globals::engineState,
                                                      "Example App", 1280, 720);
     engine_->pushStartupStep(surface);
@@ -121,4 +126,7 @@ void Application::execute() {
     engine_->pushRenderStep(std::make_shared<ImguiDemoWindow>());
 
     engine_->runContinously();
+
+    globals::appState.reset();
+    globals::engineState.reset();
 }
