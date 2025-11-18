@@ -8,7 +8,7 @@
 struct AppState {
     bool showDemoWindow = false;
     AsyncWorker<std::string> sleepWorker;
-    std::string greetings;
+    int frameCount = 0;
 };
 
 namespace globals {

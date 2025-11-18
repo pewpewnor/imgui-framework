@@ -47,14 +47,15 @@ public:
                 f1_, f2_, globals::appState->showDemoWindow);
 
         if (space_.hasBeenPressed()) {
+            std::cout << "space pressed" << std::endl;
+
             std::string name = "Alice";
             globals::appState->sleepWorker.spawn([name]() {
                 std::this_thread::sleep_for(std::chrono::seconds(2));
-                globals::appState->greetings = "Greetings from var: " + name;
                 globals::engineState->refreshSignal = true;
-                return "Greetings from result: " + name;
+                return "Hello, " + name + " " +
+                       std::to_string(globals::appState->frameCount) + "!";
             });
-            std::cout << "space pressed" << std::endl;
         }
 #endif
     }
@@ -76,16 +77,10 @@ public:
             static_cast<unsigned int>(ImGuiWindowFlags_NoMove) |
             static_cast<unsigned int>(ImGuiWindowFlags_NoBringToFrontOnFocus));
 
-        // --- 2. Set Position and Size to Match Viewport ---
-        // The ImGui backend (SFML/GLFW) is responsible for clearing the window
-        // background color. We make the ImGui window cover the viewport
-        // exactly.
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
 
-        // --- 3. BEGIN THE FULL-SCREEN WINDOW ---
-        // Pass a unique ID (e.g., "MainAppCanvas") and the flags.
         ImGui::Begin("MainAppCanvas", nullptr, flags);
 
         // ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = bg_color_;
@@ -101,14 +96,22 @@ public:
         ImGui::SameLine();
         ImGui::TextUnformatted(
             ("counter = " + std::to_string(counter_)).c_str());
+        globals::appState->frameCount++;
         ImGui::TextUnformatted(
-            ("infinite = " + std::to_string(infinite_++)).c_str());
+            ("frame count = " + std::to_string(globals::appState->frameCount))
+                .c_str());
+
+        std::string greetings = "Greetings: ";
         if (globals::appState->sleepWorker.resultIsReady()) {
-            ImGui::TextUnformatted(
-                globals::appState->sleepWorker.getResultBlocking()->c_str());
+            std::expected<std::string, std::string> result =
+                globals::appState->sleepWorker.getResultBlocking();
+            if (result.has_value()) {
+                greetings += result.value();
+            } else {
+                std::cout << "Error: " + result.error() << std::endl;
+            }
         }
-        ImGui::TextUnformatted(
-            ("The greetings: " + globals::appState->greetings).c_str());
+        ImGui::TextUnformatted(greetings.c_str());
 
         ImGui::TextUnformatted(("Application average " +
                                 std::to_string(1000.0F / imguiIO.Framerate) +
@@ -122,7 +125,6 @@ private:
     ImVec4 bg_color_{0.45F, 0.55F, 0.60F, 1.0F};
     int counter_ = 0;
     float slider_value_ = 0;
-    int infinite_ = 0;
 };
 
 class ImguiDemoWindow : public engine::RenderStep {
