@@ -78,11 +78,6 @@ public:
                std::future_status::ready;
     }
 
-    [[nodiscard]] bool isBusyWorking() const {
-        return future_.valid() && future_.wait_for(std::chrono::seconds(0)) !=
-                                      std::future_status::ready;
-    }
-
     std::optional<std::string> getResultBlocking() {
         if (!future_.valid()) {
             return "no valid async task exists to retrieve";
