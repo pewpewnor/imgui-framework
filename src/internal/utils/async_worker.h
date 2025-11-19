@@ -52,7 +52,7 @@ public:
             return {};
         }
         try {
-            future_.get();
+            future_.wait();
             return {};
         } catch (const std::exception& e) {
             return e.what();
@@ -119,7 +119,19 @@ public:
         }
     }
 
-    [[nodiscard]] Fallible waitUntilFinished() { return getResultBlocking(); }
+    [[nodiscard]] Fallible waitUntilFinished() {
+        if (!future_.valid()) {
+            return {};
+        }
+        try {
+            future_.wait();
+            return {};
+        } catch (const std::exception& e) {
+            return e.what();
+        } catch (...) {
+            return "unknown async error occurred";
+        }
+    }
 
 private:
     std::future<void> future_;
