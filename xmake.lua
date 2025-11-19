@@ -9,6 +9,8 @@ end
 
 set_languages("c++23")
 set_warnings("allextra", "pedantic", "error")
+set_toolchains("clang")
+set_runtimes("c++_static")
 
 set_policy("package.sync_requires_to_deps", true)
 add_requires("imgui >=1.91.1 <=1.91.9")
