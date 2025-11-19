@@ -8,7 +8,13 @@ namespace {
 
 void handleStopSignal(int signal) {
     spdlog::info("Signal {} received.", signal);
-    Application::stop();
+    try {
+        Application::stop();
+    } catch (const std::exception& error) {
+        spdlog::error("Error occurred: {}", error.what());
+    } catch (...) {
+        spdlog::error("Unknown fatal error occurred");
+    }
 }
 
 }
