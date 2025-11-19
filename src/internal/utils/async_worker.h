@@ -47,7 +47,10 @@ public:
         return result();
     }
 
-    [[nodiscard]] Fallible kill() {
+    [[nodiscard]] Fallible waitUntilFinished() {
+        if (!future_.valid()) {
+            return {};
+        }
         try {
             future_.get();
             return {};
@@ -116,7 +119,7 @@ public:
         }
     }
 
-    [[nodiscard]] Fallible kill() { return getResultBlocking(); }
+    [[nodiscard]] Fallible waitUntilFinished() { return getResultBlocking(); }
 
 private:
     std::future<void> future_;
