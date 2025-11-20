@@ -39,8 +39,8 @@ public:
 
         if (space_.hasBeenPressed()) {
             spdlog::debug("Space has been pressed");
-            if (!globals::tasks->sleepTask.isBusy()) {
-                globals::tasks->sleepTask.run("Alice", globals::appState->frameCount);
+            if (!globals::tasks->greetTask.isBusy()) {
+                globals::tasks->greetTask.run("Alice", globals::appState->frameCount);
             } else {
                 spdlog::debug("Ignored request to spawn since worker is busy");
             }
@@ -88,8 +88,8 @@ public:
             ("frame count = " + std::to_string(globals::appState->frameCount)).c_str());
 
         std::string greetings = "Greetings: ";
-        if (globals::tasks->sleepTask.hasResult()) {
-            greetings += globals::tasks->sleepTask.getResult();
+        if (globals::tasks->greetTask.hasResult()) {
+            greetings += globals::tasks->greetTask.getResult();
         }
         ImGui::TextUnformatted(greetings.c_str());
 

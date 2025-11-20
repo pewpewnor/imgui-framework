@@ -1,9 +1,9 @@
 #pragma once
 
-#include "sleep_task.h"
+#include "greet_task.h"
 
 struct Tasks {
-    SleepTask sleepTask;
+    GreetTask greetTask;
 };
 
 namespace globals {

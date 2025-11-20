@@ -22,6 +22,8 @@ public:
         }
     }
 
+    [[nodiscard]] bool isAvailable() const { return !isBusy(); }
+
     [[nodiscard]] bool isBusy() const {
         return future_.valid() &&
                future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready;
@@ -32,30 +34,30 @@ public:
         return result_.has_value();
     }
 
-    TResult getResult() {
+    TResult getResult() const {
         std::lock_guard<std::mutex> lock(mutex_);
         ASSERT_HARD(result_.has_value(), "result must be available to retrieve");
         return result_.value();
     }
 
 protected:
-    virtual void execute() = 0;
+    virtual void task() = 0;
 
-    virtual void postTask() {}
+    virtual void afterTask() {}
 
     void spawn() {
-        ASSERT_HARD(!isBusy(), "must not be busy to run new task");
+        ASSERT_HARD(isAvailable(), "must not be busy to run new task");
         if (invalidateOldCache_) {
             std::lock_guard<std::mutex> lock(mutex_);
             result_.reset();
         }
         future_ = std::async(std::launch::async, [this]() {
-            this->execute();
-            this->postTask();
+            this->task();
+            this->afterTask();
         });
     }
 
-    void submitResult(TResult&& value) {
+    void submitResult(const TResult& value) {
         std::lock_guard<std::mutex> lock(mutex_);
         result_ = std::move(value);
     }
