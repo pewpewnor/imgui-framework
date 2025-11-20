@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <string_view>
+
 #include "engine_state.h"
 #include "ignored_tasks.h"
 #include "spdlog/spdlog.h"
@@ -18,29 +21,26 @@ public:
 
     void ignore() {
         if (this->isBusy()) {
-            spdlog::debug("ignoring task...");
             std::lock_guard<std::mutex> lock(ignored_tasks::ignoredFuturesMutex);
             ignored_tasks::ignoredFutures.push_back(std::move(this->future));
+            spdlog::debug("<{}> Task ignored", taskName);
         }
     }
 
 protected:
     std::string taskName;
 
-    void spawnTask(std::function<TResult()> task) {
-        std::string nameCapture = taskName;
-        this->spawn([nameCapture, task = std::move(task)]() -> TResult {
-            try {
-                TResult result = task();
-                if (globals::engine) {
-                    spdlog::debug("<{}> Sending refresh signal...", nameCapture);
-                    globals::engine->sendRefreshSignal();
-                }
-                return result;
-            } catch (const std::exception& e) {
-                spdlog::error("<{}> Error detected: {}", nameCapture, e.what());
-                throw;
-            }
-        });
+    void runTask(typename AsyncTask<TResult>::TaskFunction task) {
+        std::string taskNameCapture = taskName;
+
+        auto onSuccess = [taskNameCapture](const TResult&) {
+            spdlog::debug("<{}> Task complete. Sending refresh signal...", taskNameCapture);
+            globals::engine->sendRefreshSignal();
+        };
+        auto onFailure = [taskNameCapture](std::string_view errorMsg) {
+            spdlog::error("<{}> Error detected: {}", taskNameCapture, errorMsg);
+        };
+
+        this->spawn(std::move(task), std::move(onSuccess), std::move(onFailure));
     }
 };

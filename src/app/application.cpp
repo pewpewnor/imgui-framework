@@ -135,7 +135,7 @@ Application::Application() {
 Application::~Application() {
     spdlog::info("Stopping application...");
     spdlog::info("Resetting tasks...");
-    // ignored_tasks::waitAllIgnoredFutures(std::chrono::seconds(100));
+    ignored_tasks::waitAllIgnoredFutures(std::chrono::seconds(100));
     globals::tasks.reset();
     globals::appState.reset();
     globals::engine.reset();

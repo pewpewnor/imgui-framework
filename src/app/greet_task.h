@@ -12,13 +12,12 @@ public:
     GreetTask() : Task("GreetTask") {}
 
     void execute(const std::string& name, int frame) {
-        this->spawnTask([name, frame]() -> std::string {
+        this->runTask([name, frame]() -> std::string {
             spdlog::debug("<Greet Task> Starting sleep...");
             std::this_thread::sleep_for(std::chrono::seconds(5));
-            /* if (frame > 300) {
-                throw std::runtime_error("this is a test runtime error");
+            if (frame > 300) {
+                throw std::runtime_error("Simulated runtime error in GreetTask");
             }
-            */
             std::string res = "Hello, " + name + "! (Frame: " + std::to_string(frame) + ")";
             return res;
         });
