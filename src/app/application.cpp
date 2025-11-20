@@ -4,9 +4,10 @@
 
 #include "engine/engine.h"
 #include "engine/render_step.h"
-#include "globals.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
+#include "states.h"
+#include "tasks.h"
 #include "utils/assertion.h"
 #include "utils/key_press_detector.h"
 #include "utils/style_stack.h"
@@ -38,11 +39,8 @@ public:
 
         if (space_.hasBeenPressed()) {
             spdlog::debug("Space has been pressed");
-            if (!globals::workers->executor.isBusy()) {
-                int frame = globals::appState->frameCount;
-                globals::workers->executor.spawn(
-                    &globals::workers->sleepTask, &SleepTask::execute,
-                    []() { globals::engine->sendRefreshSignal(); }, "Alice", frame);
+            if (!globals::tasks->sleepTask.isBusy()) {
+                globals::tasks->sleepTask.run("Alice", globals::appState->frameCount);
             } else {
                 spdlog::debug("Ignored request to spawn since worker is busy");
             }
@@ -90,8 +88,8 @@ public:
             ("frame count = " + std::to_string(globals::appState->frameCount)).c_str());
 
         std::string greetings = "Greetings: ";
-        if (globals::workers->sleepTask.hasResult()) {
-            greetings += globals::workers->sleepTask.getResult();
+        if (globals::tasks->sleepTask.hasResult()) {
+            greetings += globals::tasks->sleepTask.getResult();
         }
         ImGui::TextUnformatted(greetings.c_str());
 
@@ -116,9 +114,9 @@ public:
 };
 
 Application::Application() {
-    globals::engine = std::make_shared<engine::Engine>("Example App", 1280, 720);
-    globals::appState = std::make_shared<AppState>();
-    globals::workers = std::make_shared<Workers>();
+    globals::engine = std::make_unique<engine::Engine>("Example App", 1280, 720);
+    globals::appState = std::make_unique<AppState>();
+    globals::tasks = std::make_unique<Tasks>();
 
     globals::engine->pushRenderStep(std::make_shared<HotkeysHandler>());
     globals::engine->pushRenderStep(std::make_shared<MyDemoWindow>());
@@ -127,7 +125,7 @@ Application::Application() {
 
 Application::~Application() {
     spdlog::info("Stopping application...");
-    globals::workers.reset();
+    globals::tasks.reset();
     globals::appState.reset();
     globals::engine.reset();
     spdlog::info("Application stopped");
