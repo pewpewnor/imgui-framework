@@ -1,6 +1,8 @@
 #include "engine.h"
 
 #include <SFML/System.hpp>
+#include <exception>
+#include <stdexcept>
 
 namespace {
 constexpr sf::Time fpsToTimePerFrame(int fps) { return sf::milliseconds(1000 / fps); }
@@ -12,20 +14,39 @@ engine::Engine::Engine(const std::string& title, int width, int height)
           title)) {}
 
 void engine::Engine::runContinously() {
-    startup();
-    renderFramesContinously();
-    shutdown();
+    bool expected = false;
+    bool desired = true;
+    if (!running_.compare_exchange_strong(expected, desired)) {
+        throw std::runtime_error("engine is already running");
+    }
+    try {
+        startup();
+        renderFramesContinously();
+        shutdown();
+    } catch (const std::exception& error) {
+        running_ = false;
+        throw error;
+    }
 }
 
 void engine::Engine::pushStartupStep(const std::shared_ptr<engine::StartupStep>& step) {
+    if (running_) {
+        throw std::runtime_error("cannot add StartupStep while engine is running");
+    }
     startupSteps_.push_back(step);
 }
 
 void engine::Engine::pushRenderStep(const std::shared_ptr<engine::RenderStep>& step) {
+    if (running_) {
+        throw std::runtime_error("cannot add RenderStep while engine is running");
+    }
     renderSteps_.push_back(step);
 }
 
 void engine::Engine::pushShutdownStep(const std::shared_ptr<engine::ShutdownStep>& step) {
+    if (running_) {
+        throw std::runtime_error("cannot add ShutdownStep while engine is running");
+    }
     shutdownSteps_.push_back(step);
 }
 
@@ -50,7 +71,6 @@ void engine::Engine::startup() {
 
 void engine::Engine::renderFramesContinously() {
     sf::Clock clock;
-
     while (window_->isOpen() && !stopSignal_) {
         clock.restart();
 
@@ -77,7 +97,7 @@ bool engine::Engine::processEvents() {
     bool refresh = false;
     while (const auto event = window_->pollEvent()) {
         if (event->is<sf::Event::Closed>()) {
-            stopSignal_ = true;
+            sendStopSignal();
             break;
         }
         if (event->is<sf::Event::FocusLost>()) {
@@ -96,9 +116,10 @@ bool engine::Engine::processEvents() {
     if (!refresh && hasFocus && ImGui::GetIO().WantTextInput) {
         refresh = true;
     }
-    if (refreshSignal_) {
+    bool expected = true;
+    bool desired = false;
+    if (refreshSignal_.compare_exchange_strong(expected, desired)) {
         refresh = true;
-        refreshSignal_ = false;
     }
     return refresh;
 }
@@ -112,7 +133,7 @@ void engine::Engine::renderFrame() {
         }
     }
 
-    window_->clear(sf::Color::White);
+    window_->clear();
     ImGui::SFML::Render(*window_);
     window_->display();
 }
@@ -124,4 +145,5 @@ void engine::Engine::shutdown() {
 
     window_->close();
     ImGui::SFML::Shutdown();
+    running_ = false;
 }

@@ -7,7 +7,7 @@
 namespace {
 
 void handleStopSignal(int signal) {
-    spdlog::info("Signal {} received.", signal);
+    spdlog::info("Signal {} received", signal);
     try {
         Application::stop();
     } catch (const std::exception& error) {

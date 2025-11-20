@@ -10,7 +10,7 @@
 #include "globals.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
-#include "utils/assert.h"
+#include "utils/assertion.h"
 #include "utils/key_press_detector.h"
 #include "utils/result.h"
 #include "utils/style_stack.h"
@@ -41,16 +41,23 @@ public:
             f1_, f2_, globals::appState->showDemoWindow);
 
         if (space_.hasBeenPressed()) {
-            std::cout << "space pressed" << std::endl;
-
-            if (!globals::workers->sleepWorker.isBusyWorking()) {
+            spdlog::debug("Space has been pressed");
+            if (globals::workers->sleepWorker.isFreeToSpawn()) {
                 std::string name = "Alice";
-                globals::workers->sleepWorker.spawn([name]() {
-                    std::this_thread::sleep_for(std::chrono::seconds(2));
-                    globals::engine->sendRefreshSignal();
-                    return "Hello, " + name + " " + std::to_string(globals::appState->frameCount) +
-                           "!";
-                });
+                // TODO: make the task into a class instead, the optional inside of the task class
+                // instead of on the async worker
+                // it should be future<void>
+                // the task class should extend a cache class which caches the result and shit
+                globals::workers->sleepWorker.spawnBlocking(
+                    [name, frameCount = globals::appState->frameCount]() {
+                        // spdlog::debug("Spawned sleep worker");
+                        std::this_thread::sleep_for(std::chrono::seconds(2));
+                        return "Hello, " + name + " " + std::to_string(frameCount) + "!";
+                    },
+                    []() {
+                        // spdlog::debug("Sent refresh signal...");
+                        globals::engine->sendRefreshSignal();
+                    });
             } else {
                 std::cout << "ignored request since already working" << std::endl;
             }
@@ -142,18 +149,18 @@ Application::~Application() {
     globals::workers.reset();
     globals::appState.reset();
     globals::engine.reset();
-    spdlog::info("Application stopped.");
+    spdlog::info("Application stopped");
 }
 
 void Application::start() {
-    ASSERT(globals::engine, "application executed with engine existing");
+    ASSERT_SOFT(globals::engine, "application executed with engine existing");
     if (globals::engine) {
         globals::engine->runContinously();
     }
 }
 
 void Application::stop() {
-    ASSERT(globals::engine, "application executed with engine existing");
+    ASSERT_SOFT(globals::engine, "application executed with engine existing");
     if (globals::engine) {
         spdlog::debug("Sending stop signal to engine...");
         globals::engine->sendStopSignal();

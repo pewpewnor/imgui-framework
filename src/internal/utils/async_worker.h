@@ -1,138 +1,122 @@
-#include <chrono>
-#include <cstring>
+#include <atomic>
+#include <functional>
 #include <future>
+#include <mutex>
 #include <optional>
-#include <string>
+#include <tuple>
 
+#include "assertion.h"
 #include "result.h"
 
 template <typename TResult>
 class AsyncWorker {
 public:
-    AsyncWorker<TResult>(bool invalidateOldCache = false)
-        : invalidateOldCache_(invalidateOldCache) {}
+    AsyncWorker(bool invalidateOldCache = false) : invalidateOldCache_(invalidateOldCache) {}
 
-    /**
-     *  @brief spawning another while the previous future is still working
-     *  will block the main thread (since the old future's destructor is called)
-     */
-    template <typename TFunc, typename... TArgs>
-    void spawn(TFunc&& func, TArgs&&... args) {
+    AsyncWorker(const AsyncWorker&) = delete;
+    AsyncWorker(AsyncWorker&&) = delete;
+    AsyncWorker& operator=(const AsyncWorker&) = delete;
+    AsyncWorker& operator=(AsyncWorker&&) = delete;
+
+    ~AsyncWorker() {
+        if (future_.valid()) {
+            future_.wait();
+        }
+    }
+
+    [[nodiscard]] bool isFreeToSpawn() const { return !future_.valid(); }
+
+    template <typename TTaskFunc, typename TPostFunc = std::function<void()>, typename... TArgs>
+    Fallible spawnBlocking(TTaskFunc&& task, TPostFunc&& postTask, TArgs&&... taskArgs) {
+        ASSERT_HARD(isFreeToSpawn(),
+                    "Previous future task must be complete/consumed to spawn a new task");
+
         if (invalidateOldCache_) {
+            std::lock_guard<std::mutex> lock(cacheMutex_);
             cachedResult_.reset();
         }
+
+        working_ = true;
+
         future_ =
-            std::async(std::launch::async, std::forward<TFunc>(func), std::forward<TArgs>(args)...);
+            std::async(std::launch::async,
+                       [argsTuple = std::make_tuple(std::forward<TArgs>(taskArgs)...),
+                        task = std::forward<TTaskFunc>(task),
+                        postTask = std::forward<TPostFunc>(postTask), this]() mutable -> void {
+                           auto result = std::apply(
+                               [&task](auto&&... unpackedArgs) {
+                                   return std::invoke(
+                                       task, std::forward<decltype(unpackedArgs)>(unpackedArgs)...);
+                               },
+                               std::move(argsTuple));
+                           {
+                               std::lock_guard<std::mutex> lock(this->cacheMutex_);
+                               this->cachedResult_ = std::move(result);
+                           }
+                           this->working_ = false;
+                           postTask();
+                       });
+        return {};
+    }
+
+    template <typename TFunc, typename... TArgs>
+    Fallible spawnBlocking(TFunc&& task, TArgs&&... taskArgs) {
+        return spawnBlocking(std::forward<TFunc>(task), []() {}, std::forward<TArgs>(taskArgs)...);
     }
 
     [[nodiscard]] bool hasResult() const {
-        if (cachedResult_.has_value()) {
-            return true;
+        {
+            std::lock_guard<std::mutex> lock(cacheMutex_);
+            return cachedResult_.has_value();
         }
-        return isDoneWorking();
-    }
-
-    [[nodiscard]] bool isBusyWorking() const { return future_.valid(); }
-
-    [[nodiscard]] Result<std::string> getResultBlocking() {
-        if (!invalidateOldCache_ && isDoneWorking()) {
-            return result();
-        }
-        if (cachedResult_.has_value()) {
-            return cachedResult_.value();
-        }
-        if (!future_.valid()) {
-            return std::unexpected("no async task is currently working to be retrieved");
-        }
-        return result();
-    }
-
-    [[nodiscard]] Fallible waitUntilFinished() {
-        if (!future_.valid()) {
-            return {};
-        }
-        try {
-            future_.wait();
-            return {};
-        } catch (const std::exception& e) {
-            return e.what();
-        } catch (...) {
-            return "unknown async error occurred";
-        }
-    }
-
-private:
-    bool invalidateOldCache_ = true;
-    std::optional<TResult> cachedResult_;
-    std::future<TResult> future_;
-
-    [[nodiscard]] bool isDoneWorking() const {
         return future_.valid() &&
                future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
     }
 
-    [[nodiscard]] Result<std::string> result() {
-        try {
-            cachedResult_ = std::move(future_.get());
-            return cachedResult_.value();
-        } catch (const std::exception& e) {
-            return std::unexpected(e.what());
-        } catch (...) {
-            return std::unexpected("unknown async error occurred");
+    [[nodiscard]] bool isBusyWorking() const { return working_; }
+
+    [[nodiscard]] Result<TResult> getResultBlocking() {
+        {
+            std::lock_guard<std::mutex> lock(cacheMutex_);
+            if (!future_.valid() && cachedResult_.has_value()) {
+                return cachedResult_.value();
+            }
         }
-    }
-};
-
-template <>
-class AsyncWorker<void> {
-public:
-    /**
-     *  @brief spawning another while the previous future is still working
-     *  will block the main thread (since the old future's destructor is called)
-     */
-    template <typename TFunc, typename... TArgs>
-    void spawn(TFunc&& func, TArgs&&... args) {
-        future_ =
-            std::async(std::launch::async, std::forward<TFunc>(func), std::forward<TArgs>(args)...);
-    }
-
-    [[nodiscard]] bool hasResult() const {
         if (!future_.valid()) {
-            return false;
+            return std::unexpected("No async task active and no cache available");
         }
-        return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
-    }
-
-    [[nodiscard]] bool isBusyWorking() const { return future_.valid(); }
-
-    [[nodiscard]] Fallible getResultBlocking() {
-        if (!future_.valid()) {
-            return "no async task is currently working to be retrieved";
+        if (Fallible error = get()) {
+            return std::unexpected(error.value());
         }
-        try {
-            future_.get();
-            return {};
-        } catch (const std::exception& e) {
-            return e.what();
-        } catch (...) {
-            return "unknown async error occurred";
-        }
+        std::lock_guard<std::mutex> lock(cacheMutex_);
+        ASSERT_HARD(cachedResult_.has_value(), "Finished task must set a value to result");
+        return cachedResult_.value();
     }
 
     [[nodiscard]] Fallible waitUntilFinished() {
         if (!future_.valid()) {
             return {};
         }
+        return get();
+    }
+
+private:
+    bool invalidateOldCache_;
+    mutable std::mutex cacheMutex_;
+    std::optional<TResult> cachedResult_;
+    std::atomic<bool> working_ = false;
+    std::future<void> future_;
+
+    [[nodiscard]] Fallible get() {
         try {
-            future_.wait();
+            if (future_.valid()) {
+                future_.get();
+            }
             return {};
         } catch (const std::exception& e) {
             return e.what();
         } catch (...) {
-            return "unknown async error occurred";
+            return "Unknown async error occurred";
         }
     }
-
-private:
-    std::future<void> future_;
 };

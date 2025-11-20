@@ -18,6 +18,8 @@ Checks: >
     -cppcoreguidelines-non-private-member-variables-in-classes,
     -misc-non-private-member-variables-in-classes,
     -misc-use-internal-linkage,
+    -misc-static-assert,
+    -hicpp-static-assert,
     -modernize-use-trailing-return-type,
     -cppcoreguidelines-avoid-const-or-ref-data-members,
     -cppcoreguidelines-avoid-non-const-global-variables,
