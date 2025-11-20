@@ -2,12 +2,12 @@
 
 #include <memory>
 
-#include "app_state.h"
+#include "common/app_state.h"
+#include "common/tasks.h"
 #include "engine/engine.h"
 #include "engine/render_step.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
-#include "tasks.h"
 #include "utils/assertion.h"
 #include "utils/key_press_detector.h"
 #include "utils/style_stack.h"
@@ -39,16 +39,16 @@ public:
 
         if (space_.hasBeenPressed()) {
             spdlog::debug("Space has been pressed");
-            /* if (globals::tasks->greetTask.isAvailable()) {
+            if (globals::tasks->greetTask.isAvailable()) {
                 globals::tasks->greetTask.execute("Alice", globals::appState->frameCount);
             } else {
                 spdlog::debug("Ignored request to spawn since worker is busy");
-            } */
-            if (globals::tasks->greetTask.isBusy()) {
-                spdlog::debug("Canceling greet task since it's busy");
-                globals::tasks->greetTask.ignore();
             }
-            globals::tasks->greetTask.execute("Alice", globals::appState->frameCount);
+            // if (globals::tasks->greetTask.isBusy()) {
+            //     spdlog::debug("Canceling greet task since it's busy");
+            //     globals::tasks->greetTask.ignore();
+            // }
+            // globals::tasks->greetTask.execute("Alice", globals::appState->frameCount);
         }
 #endif
     }

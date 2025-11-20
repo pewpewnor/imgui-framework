@@ -3,8 +3,8 @@
 #include <string>
 #include <string_view>
 
-#include "engine_state.h"
-#include "ignored_tasks.h"
+#include "common/engine_state.h"
+#include "common/ignored_tasks.h"
 #include "spdlog/spdlog.h"
 #include "utils/async_task.h"
 
@@ -21,9 +21,9 @@ public:
 
     void ignore() {
         if (this->isBusy()) {
+            spdlog::debug("<{}> Ignored a task...", taskName);
             std::lock_guard<std::mutex> lock(ignored_tasks::ignoredFuturesMutex);
             ignored_tasks::ignoredFutures.push_back(std::move(this->future));
-            spdlog::debug("<{}> Task ignored", taskName);
         }
     }
 
@@ -34,7 +34,7 @@ protected:
         std::string taskNameCapture = taskName;
 
         auto onSuccess = [taskNameCapture](const TResult&) {
-            spdlog::debug("<{}> Task complete. Sending refresh signal...", taskNameCapture);
+            spdlog::debug("<{}> Task complete, sending refresh signal...", taskNameCapture);
             globals::engine->sendRefreshSignal();
         };
         auto onFailure = [taskNameCapture](std::string_view errorMsg) {
