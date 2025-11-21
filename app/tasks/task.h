@@ -3,14 +3,14 @@
 #include <string>
 #include <string_view>
 
-#include "common/engine_state.h"
-#include "common/ignored_tasks.h"
+#include "globals/engine_state.h"
+#include "globals/ignored_tasks.h"
 #include "spdlog/spdlog.h"
 #include "utils/assertions.h"
-#include "utils/async_task.h"
+#include "utils/async_worker.h"
 
 template <typename TResult>
-class Task : public AsyncTask<TResult> {
+class Task : public AsyncWorker<TResult> {
 public:
     Task() = default;
     Task(const Task&) = delete;

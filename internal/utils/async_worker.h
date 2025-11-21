@@ -18,18 +18,18 @@ using SuccessCallback = std::function<void(const TResult& result)>;
 using FailureCallback = std::function<void(std::string_view errorMsg)>;
 
 template <typename TResult>
-class AsyncTask {
+class AsyncWorker {
 public:
     std::shared_future<void> future;
 
-    AsyncTask(bool invalidateOldCache = false)
+    AsyncWorker(bool invalidateOldCache = false)
         : outcome_(std::make_shared<TaskOutcome>()), invalidateOldCache_(invalidateOldCache) {}
 
-    AsyncTask(AsyncTask&&) = delete;
-    AsyncTask& operator=(AsyncTask&&) = delete;
-    AsyncTask(const AsyncTask&) = delete;
-    AsyncTask& operator=(const AsyncTask&) = delete;
-    virtual ~AsyncTask() = default;
+    AsyncWorker(AsyncWorker&&) = delete;
+    AsyncWorker& operator=(AsyncWorker&&) = delete;
+    AsyncWorker(const AsyncWorker&) = delete;
+    AsyncWorker& operator=(const AsyncWorker&) = delete;
+    virtual ~AsyncWorker() = default;
 
     [[nodiscard]] bool isAvailable() const { return !isBusy(); }
 

@@ -2,11 +2,11 @@
 
 #include <memory>
 
-#include "common/app_state.h"
-#include "common/ignored_tasks.h"
-#include "common/tasks.h"
 #include "engine/engine.h"
 #include "engine/render_step.h"
+#include "globals/app_state.h"
+#include "globals/ignored_tasks.h"
+#include "globals/tasks.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
 #include "utils/assertions.h"
