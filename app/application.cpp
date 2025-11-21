@@ -9,7 +9,7 @@
 #include "imgui.h"
 #include "spdlog/spdlog.h"
 #include "steps/globals_lifetime.h"
-#include "steps/surface.h"
+#include "steps/surface_lifetime.h"
 #include "utils/assertions.h"
 #include "utils/key_press_detector.h"
 #include "utils/style_counter.h"
@@ -41,16 +41,16 @@ public:
 
         if (space_.hasBeenPressed()) {
             spdlog::debug("Space has been pressed");
-            if (globals::tasks->greetTask.isAvailable()) {
+            /* if (globals::tasks->greetTask.isAvailable()) {
                 globals::tasks->greetTask.execute("Alice", globals::appState->frameCount);
             } else {
                 spdlog::debug("Ignored request to spawn since worker is busy");
-            }
-            /* if (globals::tasks->greetTask.isBusy()) {
+            } */
+            if (globals::tasks->greetTask.isBusy()) {
                 spdlog::debug("Canceling greet task since it's busy");
                 globals::tasks->greetTask.ignore();
             }
-            globals::tasks->greetTask.execute("Alice", globals::appState->frameCount); */
+            globals::tasks->greetTask.execute("Alice", globals::appState->frameCount);
         }
 #endif
     }
@@ -127,13 +127,13 @@ public:
 Application::Application() {
     globals::engine = std::make_unique<engine::Engine>();
 
-    auto surface = std::make_shared<Surface>("Example App", 1280, 720);
-    globals::engine->pushStartupStep(surface);
-    globals::engine->pushShutdownStep(surface);
-
     auto globalsLifetime = std::make_shared<GlobalsLifetime>();
     globals::engine->pushStartupStep(globalsLifetime);
     globals::engine->pushShutdownStep(globalsLifetime);
+
+    auto surfaceLifetime = std::make_shared<SurfaceLifetime>("Example App", 1280, 720);
+    globals::engine->pushStartupStep(surfaceLifetime);
+    globals::engine->pushShutdownStep(surfaceLifetime);
 
     globals::engine->pushRenderStep(std::make_shared<HotkeysHandler>());
     globals::engine->pushRenderStep(std::make_shared<MyDemoWindow>());

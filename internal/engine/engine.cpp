@@ -5,6 +5,9 @@
 #include <ranges>
 #include <stdexcept>
 
+#include "engine/render_step.h"
+#include "engine/shutdown_step.h"
+#include "engine/startup_step.h"
 #include "utils/assertions.h"
 
 namespace {
@@ -54,8 +57,8 @@ void engine::Engine::waitUntilStopped() {
 
 void engine::Engine::startup() {
     refreshSignal_ = true;
-    for (const auto& step : startupSteps_) {
-        step->onStartup();
+    for (const std::shared_ptr<engine::StartupStep>& startupStep : startupSteps_) {
+        startupStep->onStartup();
     }
 }
 
@@ -116,9 +119,9 @@ bool engine::Engine::processEvents() {
 void engine::Engine::renderFrame() {
     ImGui::SFML::Update(*window, deltaClock_.restart());
 
-    for (const auto& step : renderSteps_) {
-        if (step->shouldRender()) {
-            step->onRender();
+    for (const std::shared_ptr<engine::RenderStep>& renderStep : renderSteps_) {
+        if (renderStep->shouldRender()) {
+            renderStep->onRender();
         }
     }
 
@@ -129,8 +132,9 @@ void engine::Engine::renderFrame() {
 
 void engine::Engine::shutdown() {
     try {
-        for (auto& step : std::ranges::reverse_view(shutdownSteps_)) {
-            step->onShutdown();
+        for (const std::shared_ptr<engine::ShutdownStep>& shutdownStep :
+             std::ranges::reverse_view(shutdownSteps_)) {
+            shutdownStep->onShutdown();
         }
     } catch (...) {
         stopRunningState();

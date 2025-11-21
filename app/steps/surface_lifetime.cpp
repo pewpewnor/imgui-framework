@@ -1,12 +1,12 @@
-#include "surface.h"
+#include "surface_lifetime.h"
 
 #include "globals/engine_state.h"
 #include "spdlog/spdlog.h"
 
-Surface::Surface(const std::string& title, int width, int height)
+SurfaceLifetime::SurfaceLifetime(const std::string& title, int width, int height)
     : title_(title), width_(width), height_(height) {}
 
-void Surface::onStartup() {
+void SurfaceLifetime::onStartup() {
     spdlog::debug("Creating window & initializing ImGui...");
     globals::engine->window = std::make_shared<sf::RenderWindow>(
         sf::VideoMode({static_cast<unsigned int>(width_), static_cast<unsigned int>(height_)}),
@@ -23,7 +23,7 @@ void Surface::onStartup() {
     ImGui::StyleColorsDark();
 }
 
-void Surface::onShutdown() {
+void SurfaceLifetime::onShutdown() {
     spdlog::debug("Closing window & shutting down ImGui...");
     if (windowInitialized_) {
         globals::engine->window->close();

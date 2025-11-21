@@ -5,9 +5,9 @@
 #include "engine/shutdown_step.h"
 #include "engine/startup_step.h"
 
-class Surface : public engine::StartupStep, public engine::ShutdownStep {
+class SurfaceLifetime : public engine::StartupStep, public engine::ShutdownStep {
 public:
-    Surface(const std::string& title, int width, int height);
+    SurfaceLifetime(const std::string& title, int width, int height);
 
     void onStartup() override;
 
