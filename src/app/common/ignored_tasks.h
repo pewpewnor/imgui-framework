@@ -1,14 +1,26 @@
+#pragma once
+
 #include <future>
+#include <memory>
 #include <mutex>
 #include <vector>
 
-namespace ignored_tasks {
+namespace globals {
 
-inline std::vector<std::shared_future<void>> ignoredFutures;
-inline std::mutex ignoredFuturesMutex;
+class IgnoredFutures {
+public:
+    std::vector<std::shared_future<void>> futures;
+    std::mutex mutex;
 
-void waitAllIgnoredFutures(std::chrono::seconds waitTimeSeconds);
+    IgnoredFutures() = default;
+    IgnoredFutures(const IgnoredFutures&) = delete;
+    IgnoredFutures(IgnoredFutures&&) = delete;
+    IgnoredFutures& operator=(const IgnoredFutures&) = delete;
+    IgnoredFutures& operator=(IgnoredFutures&&) = delete;
 
-void clearAllIgnoredFutures();
+    ~IgnoredFutures();
+};
+
+extern std::unique_ptr<IgnoredFutures> ignoredFutures;
 
 }

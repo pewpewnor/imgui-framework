@@ -2,16 +2,16 @@
 
 #include "spdlog/spdlog.h"
 
-void ignored_tasks::waitAllIgnoredFutures(std::chrono::seconds waitTimeSeconds) {
-    spdlog::debug("Waiting for all ignored futures to finish...");
-    std::lock_guard<std::mutex> lock(ignored_tasks::ignoredFuturesMutex);
-    for (const std::shared_future<void>& future : ignored_tasks::ignoredFutures) {
-        future.wait_for(waitTimeSeconds);
-    }
+namespace globals {
+
+std::unique_ptr<globals::IgnoredFutures> ignoredFutures;
+
 }
 
-void ignored_tasks::clearAllIgnoredFutures() {
+globals::IgnoredFutures::~IgnoredFutures() {
     spdlog::debug("Waiting for all ignored futures to finish...");
-    std::lock_guard<std::mutex> lock(ignored_tasks::ignoredFuturesMutex);
-    ignored_tasks::ignoredFutures.clear();
+    std::lock_guard<std::mutex> lock(mutex);
+    for (const std::shared_future<void>& future : futures) {
+        future.wait_for(std::chrono::seconds(10));
+    }
 }

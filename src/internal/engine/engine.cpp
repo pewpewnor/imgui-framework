@@ -7,7 +7,9 @@
 #include "assertions.h"
 
 namespace {
+
 constexpr sf::Time fpsToTimePerFrame(int fps) { return sf::milliseconds(1000 / fps); }
+
 }
 
 engine::Engine::Engine(const std::string& title, int width, int height)
@@ -18,7 +20,7 @@ engine::Engine::Engine(const std::string& title, int width, int height)
 void engine::Engine::runContinously() {
     bool expected = false;
     bool desired = true;
-    if (!running_.compare_exchange_strong(expected, desired)) {
+    if (!isRunning_.compare_exchange_strong(expected, desired)) {
         throw std::runtime_error("engine is already running");
     }
     try {
@@ -26,23 +28,23 @@ void engine::Engine::runContinously() {
         renderFramesContinously();
         shutdown();
     } catch (const std::exception& error) {
-        running_ = false;
+        isRunning_ = false;
         throw error;
     }
 }
 
 void engine::Engine::pushStartupStep(const std::shared_ptr<engine::StartupStep>& step) {
-    ASSERT(!running_, "cannot add StartupStep while engine is running");
+    ASSERT(!isRunning_, "cannot add startup step while engine is running");
     startupSteps_.push_back(step);
 }
 
 void engine::Engine::pushRenderStep(const std::shared_ptr<engine::RenderStep>& step) {
-    ASSERT(!running_, "cannot add RenderStep while engine is running");
+    ASSERT(!isRunning_, "cannot add render step while engine is running");
     renderSteps_.push_back(step);
 }
 
 void engine::Engine::pushShutdownStep(const std::shared_ptr<engine::ShutdownStep>& step) {
-    ASSERT(!running_, "cannot add ShutdownStep while engine is running");
+    ASSERT(!isRunning_, "cannot add shutdown step while engine is running");
     shutdownSteps_.push_back(step);
 }
 
@@ -141,5 +143,5 @@ void engine::Engine::shutdown() {
 
     window_->close();
     ImGui::SFML::Shutdown();
-    running_ = false;
+    isRunning_ = false;
 }

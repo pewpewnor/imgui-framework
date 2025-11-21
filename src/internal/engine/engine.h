@@ -32,7 +32,7 @@ public:
     void sendRefreshSignal();
 
 private:
-    std::atomic<bool> running_ = false;
+    std::atomic<bool> isRunning_ = false;
     std::shared_ptr<sf::RenderWindow> window_;
     sf::Clock deltaClock_;
     std::atomic<bool> stopSignal_ = false;

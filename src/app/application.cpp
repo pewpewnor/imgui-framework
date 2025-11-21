@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "common/app_state.h"
+#include "common/ignored_tasks.h"
 #include "common/tasks.h"
 #include "engine/engine.h"
 #include "engine/render_step.h"
@@ -125,6 +126,7 @@ public:
 Application::Application() {
     globals::engine = std::make_unique<engine::Engine>("Example App", 1280, 720);
     globals::appState = std::make_unique<globals::AppState>();
+    globals::ignoredFutures = std::make_unique<globals::IgnoredFutures>();
     globals::tasks = std::make_unique<globals::Tasks>();
 
     globals::engine->pushRenderStep(std::make_shared<HotkeysHandler>());
@@ -135,7 +137,7 @@ Application::Application() {
 Application::~Application() {
     spdlog::info("Stopping application...");
     spdlog::info("Resetting tasks...");
-    ignored_tasks::waitAllIgnoredFutures(std::chrono::seconds(100));
+    globals::ignoredFutures.reset();
     globals::tasks.reset();
     globals::appState.reset();
     globals::engine.reset();

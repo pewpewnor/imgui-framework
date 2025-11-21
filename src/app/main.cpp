@@ -11,7 +11,7 @@ void handleStopSignal(int signal) {
     try {
         Application::stop();
     } catch (const std::exception& error) {
-        spdlog::error("Error occurred: {}", error.what());
+        spdlog::error("Error when reacting to signal {}: {}", signal, error.what());
     } catch (...) {
         spdlog::error("Unknown fatal error occurred");
     }
@@ -20,14 +20,14 @@ void handleStopSignal(int signal) {
 }
 
 int main() {
+    std::signal(SIGTERM, handleStopSignal);
+    std::signal(SIGINT, handleStopSignal);
+
 #ifndef NDEBUG
     spdlog::set_level(spdlog::level::debug);
 #else
     spdlog::set_level(spdlog::level::info);
 #endif
-
-    std::signal(SIGINT, handleStopSignal);
-    std::signal(SIGTERM, handleStopSignal);
 
     try {
         spdlog::debug("Setting up application...");

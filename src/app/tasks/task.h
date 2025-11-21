@@ -6,13 +6,13 @@
 #include "common/engine_state.h"
 #include "common/ignored_tasks.h"
 #include "spdlog/spdlog.h"
+#include "utils/assertions.h"
 #include "utils/async_task.h"
 
 template <typename TResult>
-class Task : public virtual AsyncTask<TResult> {
+class Task : public AsyncTask<TResult> {
 public:
-    Task(std::string_view taskName) : taskName(taskName) {}
-
+    Task() = default;
     Task(const Task&) = delete;
     Task(Task&&) = delete;
     Task& operator=(const Task&) = delete;
@@ -20,27 +20,26 @@ public:
     virtual ~Task() = default;
 
     void ignore() {
+        ASSERT_SOFT(this->isBusy(), "task must be busy to be ignored");
         if (this->isBusy()) {
-            spdlog::debug("<{}> Ignored a task...", taskName);
-            std::lock_guard<std::mutex> lock(ignored_tasks::ignoredFuturesMutex);
-            ignored_tasks::ignoredFutures.push_back(std::move(this->future));
+            spdlog::debug("<{}> Ignored a task...", getTaskName());
+            std::lock_guard<std::mutex> lock(globals::ignoredFutures->mutex);
+            globals::ignoredFutures->futures.push_back(std::move(this->future));
         }
     }
 
 protected:
-    std::string taskName;
+    constexpr virtual std::string getTaskName() = 0;
 
-    void runTask(TaskFunction<TResult> task) {
-        std::string taskNameCapture = taskName;
-
-        auto onSuccess = [taskNameCapture](const TResult&) {
-            spdlog::debug("<{}> Task complete, sending refresh signal...", taskNameCapture);
+    void spawnTask(TaskFunction<TResult> task) {
+        std::string taskName = getTaskName();
+        auto onSuccess = [taskName](const TResult&) {
+            spdlog::debug("<{}> Task complete, sending refresh signal...", taskName);
             globals::engine->sendRefreshSignal();
         };
-        auto onFailure = [taskNameCapture](std::string_view errorMsg) {
-            spdlog::error("<{}> Error detected: {}", taskNameCapture, errorMsg);
+        auto onFailure = [taskName](std::string_view errorMsg) {
+            spdlog::error("<{}> Error detected: {}", taskName, errorMsg);
         };
-
-        this->spawn(std::move(task), std::move(onSuccess), std::move(onFailure));
+        this->spawnTaskWithCallbacks(std::move(task), std::move(onSuccess), std::move(onFailure));
     }
 };

@@ -23,7 +23,7 @@ public:
     std::shared_future<void> future;
 
     AsyncTask(bool invalidateOldCache = false)
-        : core_(std::make_shared<TaskCore>()), invalidateOldCache_(invalidateOldCache) {}
+        : outcome_(std::make_shared<TaskOutcome>()), invalidateOldCache_(invalidateOldCache) {}
 
     AsyncTask(AsyncTask&&) = delete;
     AsyncTask& operator=(AsyncTask&&) = delete;
@@ -39,50 +39,50 @@ public:
     }
 
     [[nodiscard]] bool hasResult() const {
-        std::lock_guard<std::mutex> lock(core_->outcomeMutex);
-        return core_->result.has_value();
+        std::lock_guard<std::mutex> lock(outcome_->mutex);
+        return outcome_->result.has_value();
     }
 
     Result<TResult> getResult() {
-        std::lock_guard<std::mutex> lock(core_->outcomeMutex);
-        if (core_->error.has_value()) {
-            std::string errorMessage = core_->error.value();
-            core_->error.reset();
+        std::lock_guard<std::mutex> lock(outcome_->mutex);
+        if (outcome_->error.has_value()) {
+            std::string errorMessage = outcome_->error.value();
+            outcome_->error.reset();
             return std::unexpected{errorMessage};
         }
-        ASSERT(core_->result.has_value(), "result must be available to retrieve");
-        return core_->result.value();
+        ASSERT(outcome_->result.has_value(), "task result or error must be available to retrieve");
+        return outcome_->result.value();
     }
 
 protected:
-    void spawn(TaskFunction<TResult> task, SuccessCallback<TResult> onSuccess,
-               FailureCallback onFailure) {
+    void spawnTaskWithCallbacks(TaskFunction<TResult> task, SuccessCallback<TResult> onSuccess,
+                                FailureCallback onFailure) {
         ASSERT(isAvailable(), "must be available to spawn a new task");
-        std::shared_ptr<TaskCore> prevCore = core_;
-        core_ = std::make_shared<TaskCore>();
+
+        std::shared_ptr<TaskOutcome> prevCore = outcome_;
+        outcome_ = std::make_shared<TaskOutcome>();
         if (!invalidateOldCache_ && prevCore) {
-            std::lock_guard<std::mutex> lockPrevCore(prevCore->outcomeMutex);
-            std::lock_guard<std::mutex> lockCore(core_->outcomeMutex);
-            core_->result = prevCore->result;
+            std::lock_guard<std::mutex> lockPrevCore(prevCore->mutex);
+            std::lock_guard<std::mutex> lockCore(outcome_->mutex);
+            outcome_->result = prevCore->result;
         }
 
-        std::shared_ptr<TaskCore> coreCapture = core_;
-        future = std::async(std::launch::async, [coreCapture, task = std::move(task),
+        future = std::async(std::launch::async, [outcome = this->outcome_, task = std::move(task),
                                                  onSuccess = std::move(onSuccess),
                                                  onFailure = std::move(onFailure)]() {
                      try {
                          TResult res = task();
                          {
-                             std::lock_guard<std::mutex> lock(coreCapture->outcomeMutex);
-                             coreCapture->result = res;
+                             std::lock_guard<std::mutex> lock(outcome->mutex);
+                             outcome->result = res;
                          }
                          if (onSuccess) {
                              onSuccess(res);
                          }
                      } catch (const std::exception& e) {
                          {
-                             std::lock_guard<std::mutex> lock(coreCapture->outcomeMutex);
-                             coreCapture->error = e.what();
+                             std::lock_guard<std::mutex> lock(outcome->mutex);
+                             outcome->error = e.what();
                          }
                          if (onFailure) {
                              onFailure(e.what());
@@ -90,8 +90,8 @@ protected:
                      } catch (...) {
                          std::string unknownMsg = "unknown async task error";
                          {
-                             std::lock_guard<std::mutex> lock(coreCapture->outcomeMutex);
-                             coreCapture->error = unknownMsg;
+                             std::lock_guard<std::mutex> lock(outcome->mutex);
+                             outcome->error = unknownMsg;
                          }
                          if (onFailure) {
                              onFailure(unknownMsg);
@@ -100,21 +100,13 @@ protected:
                  }).share();
     }
 
-    std::string getErrorMessage() {
-        if (!core_) {
-            return "No task core";
-        }
-        std::lock_guard<std::mutex> lock(core_->outcomeMutex);
-        return core_->error.value_or("");
-    }
-
 private:
-    struct TaskCore {
-        std::mutex outcomeMutex;
+    struct TaskOutcome {
+        std::mutex mutex;
         Fallible error;
         std::optional<TResult> result;
     };
 
-    std::shared_ptr<TaskCore> core_;
+    std::shared_ptr<TaskOutcome> outcome_;
     bool invalidateOldCache_;
 };
