@@ -5,7 +5,7 @@
 #include "engine/engine.h"
 #include "engine/render_step.h"
 #include "globals/app_state.h"
-#include "globals/ignored_tasks.h"
+#include "globals/ignored_futures.h"
 #include "globals/tasks.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
@@ -136,7 +136,6 @@ Application::Application() {
 
 Application::~Application() {
     spdlog::info("Stopping application...");
-    spdlog::info("Resetting tasks...");
     globals::ignoredFutures.reset();
     globals::tasks.reset();
     globals::appState.reset();
@@ -145,16 +144,18 @@ Application::~Application() {
 }
 
 void Application::start() {
-    ASSERT_SOFT(globals::engine, "application executed with engine existing");
     if (globals::engine) {
         globals::engine->runContinously();
+    } else {
+        ASSERT_SOFT(false, "attempt to execute application with engine existing");
     }
 }
 
 void Application::stop() {
-    ASSERT_SOFT(globals::engine, "application executed with engine existing");
     if (globals::engine) {
         spdlog::debug("Sending stop signal to engine...");
         globals::engine->sendStopSignal();
+    } else {
+        ASSERT_SOFT(false, "attempt to stop application with engine existing");
     }
 }

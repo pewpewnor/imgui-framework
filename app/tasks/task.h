@@ -4,7 +4,7 @@
 #include <string_view>
 
 #include "globals/engine_state.h"
-#include "globals/ignored_tasks.h"
+#include "globals/ignored_futures.h"
 #include "spdlog/spdlog.h"
 #include "utils/assertions.h"
 #include "utils/async_worker.h"
@@ -20,11 +20,12 @@ public:
     virtual ~Task() = default;
 
     void ignore() {
-        ASSERT_SOFT(this->isBusy(), "task must be busy to be ignored");
         if (this->isBusy()) {
             spdlog::debug("<{}> Ignored a task...", getTaskName());
             std::lock_guard<std::mutex> lock(globals::ignoredFutures->mutex);
             globals::ignoredFutures->futures.push_back(std::move(this->future));
+        } else {
+            ASSERT_SOFT(false, "task must be busy to be ignored");
         }
     }
 
