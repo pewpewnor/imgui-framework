@@ -7,6 +7,8 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <vector>
 
 #include "render_step.h"
@@ -31,12 +33,20 @@ public:
 
     void sendRefreshSignal();
 
+    void waitUntilStopped();
+
 private:
     std::atomic<bool> isRunning_ = false;
+    std::mutex runningMutex_;
+    std::condition_variable runningCv_;
+    bool imguiInitialized_ = false;
+
     std::shared_ptr<sf::RenderWindow> window_;
     sf::Clock deltaClock_;
+
     std::atomic<bool> stopSignal_ = false;
     std::atomic<bool> refreshSignal_ = false;
+
     std::vector<std::shared_ptr<engine::StartupStep>> startupSteps_;
     std::vector<std::shared_ptr<engine::RenderStep>> renderSteps_;
     std::vector<std::shared_ptr<engine::ShutdownStep>> shutdownSteps_;
@@ -50,5 +60,7 @@ private:
     void renderFrame();
 
     void shutdown();
+
+    void setRunningState(bool isRunning);
 };
 }

@@ -1,7 +1,7 @@
 #include "engine.h"
 
 #include <SFML/System.hpp>
-#include <exception>
+#include <mutex>
 #include <stdexcept>
 
 #include "utils/assertions.h"
@@ -18,39 +18,40 @@ engine::Engine::Engine(const std::string& title, int width, int height)
           title)) {}
 
 void engine::Engine::runContinously() {
-    bool expected = false;
-    bool desired = true;
-    if (!isRunning_.compare_exchange_strong(expected, desired)) {
-        throw std::runtime_error("engine is already running");
-    }
+    ASSERT(!isRunning_, "running engine that is stopped");
     try {
         startup();
         renderFramesContinously();
+    } catch (...) {
         shutdown();
-    } catch (const std::exception& error) {
-        isRunning_ = false;
-        throw error;
+        throw;
     }
+    shutdown();
 }
 
 void engine::Engine::pushStartupStep(const std::shared_ptr<engine::StartupStep>& step) {
-    ASSERT(!isRunning_, "cannot add startup step while engine is running");
+    ASSERT(!isRunning_, "adding step while engine is not running");
     startupSteps_.push_back(step);
 }
 
 void engine::Engine::pushRenderStep(const std::shared_ptr<engine::RenderStep>& step) {
-    ASSERT(!isRunning_, "cannot add render step while engine is running");
+    ASSERT(!isRunning_, "adding step while engine is not running");
     renderSteps_.push_back(step);
 }
 
 void engine::Engine::pushShutdownStep(const std::shared_ptr<engine::ShutdownStep>& step) {
-    ASSERT(!isRunning_, "cannot add shutdown step while engine is running");
+    ASSERT(!isRunning_, "adding step while engine is not running");
     shutdownSteps_.push_back(step);
 }
 
 void engine::Engine::sendStopSignal() { stopSignal_ = true; }
 
 void engine::Engine::sendRefreshSignal() { refreshSignal_ = true; }
+
+void engine::Engine::waitUntilStopped() {
+    std::unique_lock<std::mutex> lock(runningMutex_);
+    runningCv_.wait(lock, [this] { return !isRunning_; });
+}
 
 void engine::Engine::startup() {
     stopSignal_ = false;
@@ -60,6 +61,7 @@ void engine::Engine::startup() {
     if (!ImGui::SFML::Init(*window_)) {
         throw std::runtime_error("failed to initialize imgui-sfml");
     }
+    imguiInitialized_ = true;
     ImGui::StyleColorsDark();
 
     for (const auto& step : startupSteps_) {
@@ -69,7 +71,7 @@ void engine::Engine::startup() {
 
 void engine::Engine::renderFramesContinously() {
     sf::Clock clock;
-    while (window_->isOpen() && !stopSignal_) {
+    while (!stopSignal_ && window_->isOpen()) {
         clock.restart();
 
         bool refresh = processEvents();
@@ -115,8 +117,7 @@ bool engine::Engine::processEvents() {
         refresh = true;
     }
     bool expected = true;
-    bool desired = false;
-    if (refreshSignal_.compare_exchange_strong(expected, desired)) {
+    if (refreshSignal_.compare_exchange_strong(expected, false)) {
         refresh = true;
     }
     return refresh;
@@ -137,11 +138,26 @@ void engine::Engine::renderFrame() {
 }
 
 void engine::Engine::shutdown() {
-    for (const auto& step : shutdownSteps_) {
-        step->onShutdown();
+    try {
+        for (const auto& step : shutdownSteps_) {
+            step->onShutdown();
+        }
+        window_->close();
+        if (imguiInitialized_) {
+            ImGui::SFML::Shutdown();
+            imguiInitialized_ = false;
+        }
+    } catch (...) {
+        imguiInitialized_ = false;
+        setRunningState(false);
+        throw;
     }
+    imguiInitialized_ = false;
+    setRunningState(false);
+}
 
-    window_->close();
-    ImGui::SFML::Shutdown();
-    isRunning_ = false;
+void engine::Engine::setRunningState(bool isRunning) {
+    std::lock_guard<std::mutex> lock(runningMutex_);
+    isRunning_ = isRunning;
+    runningCv_.notify_all();
 }

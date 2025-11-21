@@ -5,10 +5,10 @@
 #include "engine/engine.h"
 #include "engine/render_step.h"
 #include "globals/app_state.h"
-#include "globals/ignored_futures.h"
 #include "globals/tasks.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
+#include "steps/globals_lifetime.h"
 #include "utils/assertions.h"
 #include "utils/key_press_detector.h"
 #include "utils/style_counter.h"
@@ -125,9 +125,10 @@ public:
 
 Application::Application() {
     globals::engine = std::make_unique<engine::Engine>("Example App", 1280, 720);
-    globals::appState = std::make_unique<globals::AppState>();
-    globals::ignoredFutures = std::make_unique<globals::IgnoredFutures>();
-    globals::tasks = std::make_unique<globals::Tasks>();
+
+    auto globalsLifetime = std::make_shared<GlobalsLifetime>();
+    globals::engine->pushStartupStep(globalsLifetime);
+    globals::engine->pushShutdownStep(globalsLifetime);
 
     globals::engine->pushRenderStep(std::make_shared<HotkeysHandler>());
     globals::engine->pushRenderStep(std::make_shared<MyDemoWindow>());
@@ -136,9 +137,7 @@ Application::Application() {
 
 Application::~Application() {
     spdlog::info("Stopping application...");
-    globals::ignoredFutures.reset();
-    globals::tasks.reset();
-    globals::appState.reset();
+    stop();
     globals::engine.reset();
     spdlog::info("Application stopped");
 }
@@ -155,6 +154,9 @@ void Application::stop() {
     if (globals::engine) {
         spdlog::debug("Sending stop signal to engine...");
         globals::engine->sendStopSignal();
+        spdlog::debug("Waiting for engine to stop...");
+        globals::engine->waitUntilStopped();
+        spdlog::debug("Engine has stopped");
     } else {
         ASSERT_SOFT(false, "attempt to stop application with engine existing");
     }
