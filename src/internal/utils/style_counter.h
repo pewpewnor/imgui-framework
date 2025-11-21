@@ -2,15 +2,15 @@
 
 #include "imgui.h"
 
-class StyleStack {
+class StyleCounter {
 public:
-    StyleStack() = default;
-    StyleStack(const StyleStack&) = delete;
-    StyleStack(StyleStack&&) = delete;
-    StyleStack& operator=(const StyleStack&) = delete;
-    StyleStack& operator=(StyleStack&&) = delete;
+    StyleCounter() = default;
+    StyleCounter(const StyleCounter&) = delete;
+    StyleCounter(StyleCounter&&) = delete;
+    StyleCounter& operator=(const StyleCounter&) = delete;
+    StyleCounter& operator=(StyleCounter&&) = delete;
 
-    ~StyleStack();
+    ~StyleCounter();
 
     void pushStyleVar(ImGuiStyleVar styleVar, float value);
 

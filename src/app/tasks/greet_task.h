@@ -18,8 +18,7 @@ public:
             if (frame > 300) {
                 throw std::runtime_error("simulated runtime error for greetings");
             }
-            std::string res = "Hello, " + name + "! (Frame: " + std::to_string(frame) + ")";
-            return res;
+            return "Hello, " + name + "! (Frame: " + std::to_string(frame) + ")";
         });
     }
 };

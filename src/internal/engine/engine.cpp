@@ -4,6 +4,8 @@
 #include <exception>
 #include <stdexcept>
 
+#include "assertions.h"
+
 namespace {
 constexpr sf::Time fpsToTimePerFrame(int fps) { return sf::milliseconds(1000 / fps); }
 }
@@ -30,23 +32,17 @@ void engine::Engine::runContinously() {
 }
 
 void engine::Engine::pushStartupStep(const std::shared_ptr<engine::StartupStep>& step) {
-    if (running_) {
-        throw std::runtime_error("cannot add StartupStep while engine is running");
-    }
+    ASSERT(!running_, "cannot add StartupStep while engine is running");
     startupSteps_.push_back(step);
 }
 
 void engine::Engine::pushRenderStep(const std::shared_ptr<engine::RenderStep>& step) {
-    if (running_) {
-        throw std::runtime_error("cannot add RenderStep while engine is running");
-    }
+    ASSERT(!running_, "cannot add RenderStep while engine is running");
     renderSteps_.push_back(step);
 }
 
 void engine::Engine::pushShutdownStep(const std::shared_ptr<engine::ShutdownStep>& step) {
-    if (running_) {
-        throw std::runtime_error("cannot add ShutdownStep while engine is running");
-    }
+    ASSERT(!running_, "cannot add ShutdownStep while engine is running");
     shutdownSteps_.push_back(step);
 }
 
@@ -84,7 +80,7 @@ void engine::Engine::renderFramesContinously() {
             desiredDuration = fpsToTimePerFrame(70);
         } else {
             elapsed = clock.getElapsedTime();
-            desiredDuration = fpsToTimePerFrame(20);
+            desiredDuration = fpsToTimePerFrame(30);
         }
         if (sf::Time sleepTime = desiredDuration - elapsed; sleepTime > sf::Time::Zero) {
             sf::sleep(sleepTime);

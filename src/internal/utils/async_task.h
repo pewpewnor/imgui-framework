@@ -8,7 +8,7 @@
 #include <optional>
 #include <string>
 
-#include "assertion.h"
+#include "assertions.h"
 #include "result.h"
 
 template <typename TResult>
@@ -50,14 +50,14 @@ public:
             core_->error.reset();
             return std::unexpected{errorMessage};
         }
-        ASSERT_HARD(core_->result.has_value(), "result must be available to retrieve");
+        ASSERT(core_->result.has_value(), "result must be available to retrieve");
         return core_->result.value();
     }
 
 protected:
     void spawn(TaskFunction<TResult> task, SuccessCallback<TResult> onSuccess,
                FailureCallback onFailure) {
-        ASSERT_HARD(isAvailable(), "must be available to spawn a new task");
+        ASSERT(isAvailable(), "must be available to spawn a new task");
         std::shared_ptr<TaskCore> prevCore = core_;
         core_ = std::make_shared<TaskCore>();
         if (!invalidateOldCache_ && prevCore) {

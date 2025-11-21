@@ -15,15 +15,17 @@ end
 add_requires("imgui-sfml 3.0.0")
 add_requires("spdlog")
 
-target("engine")
-    set_kind("static")
-    add_files("src/internal/engine/**.cpp")
-    add_packages("imgui-sfml", { public = true })
-
 target("utils")
     set_kind("static")
     add_files("src/internal/utils/**.cpp")
     add_packages("imgui-sfml", "spdlog", { public = true })
+
+target("engine")
+    set_kind("static")
+    add_files("src/internal/engine/**.cpp")
+    add_includedirs("src/internal/utils")
+    add_deps("utils")
+    add_packages("imgui-sfml", { public = true })
 
 target("app")
     set_kind("binary")

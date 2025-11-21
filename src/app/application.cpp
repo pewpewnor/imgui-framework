@@ -8,14 +8,14 @@
 #include "engine/render_step.h"
 #include "imgui.h"
 #include "spdlog/spdlog.h"
-#include "utils/assertion.h"
+#include "utils/assertions.h"
 #include "utils/key_press_detector.h"
-#include "utils/style_stack.h"
+#include "utils/style_counter.h"
 
 namespace components {
 
 bool customButton(const char* label, ImVec2 size = ImVec2(120, 60)) {
-    StyleStack style;
+    StyleCounter style;
     style.pushStyleColor(ImGuiCol_Button, ImVec4(0.20F, 0.30F, 0.60F, 1.0F));         // normal
     style.pushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25F, 0.40F, 0.80F, 1.0F));  // hover
     style.pushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15F, 0.25F, 0.55F, 1.0F));   // active
