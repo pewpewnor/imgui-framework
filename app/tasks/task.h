@@ -1,16 +1,12 @@
 #pragma once
 
-#include <string>
-#include <string_view>
-
 #include "globals/engine_state.h"
 #include "globals/ignored_futures.h"
 #include "spdlog/spdlog.h"
-#include "utils/assertions.h"
 #include "utils/async_worker.h"
 
 template <typename TResult>
-class Task : public AsyncWorker<TResult> {
+class Task : public virtual AsyncWorker<TResult> {
 public:
     Task() = default;
     Task(const Task&) = delete;
@@ -19,9 +15,9 @@ public:
     Task& operator=(Task&&) = delete;
     virtual ~Task() = default;
 
-    void ignore() {
+    void ignore() const {
         if (this->isBusy()) {
-            spdlog::debug("<{}> Ignored a task...", getTaskName());
+            spdlog::debug("<{}> Ignoring this particular task...", getTaskId());
             std::lock_guard<std::mutex> lock(globals::ignoredFutures->mutex);
             globals::ignoredFutures->futures.push_back(std::move(this->future));
         } else {
@@ -30,17 +26,17 @@ public:
     }
 
 protected:
-    constexpr virtual std::string getTaskName() = 0;
+    [[nodiscard]] virtual std::string getTaskId() const = 0;
 
-    void spawnTask(TaskFunction<TResult> task) {
-        std::string taskName = getTaskName();
-        auto onSuccess = [taskName](const TResult&) {
-            spdlog::debug("<{}> Task complete, sending refresh signal...", taskName);
+    void spawnTask(const TaskFunction<TResult>& task) {
+        std::string taskId = getTaskId();
+        auto onSuccess = [taskId](const TResult&) {
+            spdlog::debug("<{}> Task complete, sending refresh signal...", taskId);
             globals::engine->sendRefreshSignal();
         };
-        auto onFailure = [taskName](std::string_view errorMsg) {
-            spdlog::error("<{}> Error detected: {}", taskName, errorMsg);
+        auto onFailure = [taskId](std::string_view errorMsg) {
+            spdlog::error("<{}> Error detected: {}", taskId, errorMsg);
         };
-        this->spawnTaskWithCallbacks(std::move(task), std::move(onSuccess), std::move(onFailure));
+        this->spawnTaskWithCallbacks(task, std::move(onSuccess), std::move(onFailure));
     }
 };
