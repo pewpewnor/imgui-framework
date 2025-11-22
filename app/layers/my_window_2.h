@@ -9,12 +9,9 @@ public:
     bool shouldRender() override { return globals::appState->showWindow2; }
 
     void onRender() override {
-        bool isOpen = true;
-        ImGui::Begin("Window2", &isOpen);
-        if (isOpen) {
-            if (components::customButton("Close")) {
-                globals::appState->showWindow2 = false;
-            }
+        ImGui::Begin("Window2", &globals::appState->showWindow2);
+        if (components::customButton("Close")) {
+            globals::appState->showWindow2 = false;
         }
         // ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = bg_color_;
         // ImGui::ColorEdit3("Background color", &bg_color_.x);
