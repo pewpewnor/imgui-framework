@@ -17,7 +17,7 @@ public:
 
     virtual ~Task() { ignore(); }
 
-    void ignoreCurrentTask() const {
+    void ignoreCurrentTask() {
         ignore();
         spdlog::debug("<{}> This task has been ignored...", getTaskId());
     }
