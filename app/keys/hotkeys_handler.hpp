@@ -1,8 +1,9 @@
 #pragma once
 
+#include <spdlog/spdlog.h>
+
 #include "globals/app_state.hpp"
 #include "globals/tasks.hpp"
-#include "spdlog/spdlog.h"
 #include "utils/key_press_detector.hpp"
 
 class HotkeysHandler : public engine::RenderStep {

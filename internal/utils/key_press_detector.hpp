@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SFML/Window/Keyboard.hpp"
+#include <SFML/Window/Keyboard.hpp>
 
 /**
  *  @brief do not create multiple instances for the same key

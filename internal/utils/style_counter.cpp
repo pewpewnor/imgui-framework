@@ -1,6 +1,6 @@
 #include "style_counter.hpp"
 
-#include "imgui.h"
+#include <imgui.h>
 
 void StyleCounter::pushStyleVar(ImGuiStyleVar styleVar, float value) {
     ImGui::PushStyleVar(styleVar, value);

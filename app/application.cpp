@@ -1,5 +1,7 @@
 #include "application.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <memory>
 
 #include "engine/engine.hpp"
@@ -10,7 +12,6 @@
 #include "layers/my_window_2.hpp"
 #include "lifetimes/globals_lifetime.hpp"
 #include "lifetimes/surface_lifetime.hpp"
-#include "spdlog/spdlog.h"
 #include "utils/assertions.hpp"
 
 Application::Application() {

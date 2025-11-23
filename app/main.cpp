@@ -1,8 +1,9 @@
+#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
+
 #include <csignal>
 
 #include "application.hpp"
-#include "spdlog/common.h"
-#include "spdlog/spdlog.h"
 
 namespace {
 

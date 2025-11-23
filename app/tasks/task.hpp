@@ -1,8 +1,9 @@
 #pragma once
 
+#include <spdlog/spdlog.h>
+
 #include "globals/engine_state.hpp"
 #include "globals/ignored_futures.hpp"
-#include "spdlog/spdlog.h"
 #include "utils/assertions.hpp"
 #include "utils/async_worker.hpp"
 
