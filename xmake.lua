@@ -14,6 +14,7 @@ end
 
 add_requires("imgui-sfml 3.0.0")
 add_requires("spdlog")
+add_requires("lua")
 
 includes("core")
 
@@ -24,6 +25,7 @@ target("tuesdays-core")
         "tuesdays-core-utils",
         "tuesdays-core-components",
         "tuesdays-core-engine",
+        "tuesdays-core-luaren",
         "tuesdays-core-globals",
         "tuesdays-core-lifetimes",
         "tuesdays-core-keys",

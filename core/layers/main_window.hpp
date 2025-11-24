@@ -6,10 +6,12 @@
 
 #include "engine/render_step.hpp"
 #include "globals/dispatch_state.hpp"
+#include "luaren/lua_renderer.hpp"
 
 class MainWindow : public engine::RenderStep {
 public:
     void onRender() override {
+        luaRenderer_.registerGlobalBool("showImguiDemoWindow", &g::dispatch->showImguiDemoWindow);
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -24,6 +26,8 @@ public:
         if (g::dispatch->showImguiDemoWindow) {
             ImGui::ShowDemoWindow(&g::dispatch->showImguiDemoWindow);
         }
+
+        luaRenderer_.render();
 
         ImVec2 displaySize = ImGui::GetIO().DisplaySize;
         ImGui::SetNextWindowPos(ImVec2(displaySize.x, 0), ImGuiCond_Always, ImVec2(1, 0));
@@ -46,4 +50,6 @@ public:
 
 private:
     static inline unsigned int frameCount = 1;
+
+    LuaRenderer luaRenderer_{"/home/braum/Burn/Git/imgui-example/lua/script.lua"};
 };
